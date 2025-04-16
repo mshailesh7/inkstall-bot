@@ -3,15 +3,8 @@
 // import apiClient from './apiClient';
 
 // --- Mock Data (Remove when connecting to real backend) ---
-let mockSubjects = [
-    { id: '1', name: 'IGCSE Physics', code: '0625', createdAt: new Date().toISOString(), textbookCount: 1 },
-    { id: '2', name: 'IGCSE Chemistry', code: '0620', createdAt: new Date().toISOString(), textbookCount: 0 },
-    { id: '3', name: 'IGCSE Mathematics', code: '0580', createdAt: new Date().toISOString(), textbookCount: 2 },
-    { id: '4', name: 'IGCSE Biology', code: '0610', createdAt: new Date().toISOString(), textbookCount: 1 },
-    { id: '5', name: 'IGCSE English', code: '0500', createdAt: new Date().toISOString(), textbookCount: 3 },
-    { id: '6', name: 'IGCSE Geography', code: '0460', createdAt: new Date().toISOString(), textbookCount: 2 },
-];
-let nextId = 7;
+let mockSubjects = [];
+let nextId = 1;
 // --- End Mock Data ---
 
 /**
@@ -58,7 +51,7 @@ export const addSubject = async (subjectData) => {
         ...subjectData,
         id: String(nextId++),
         createdAt: new Date().toISOString(),
-        textbookCount: 0,
+        textbookCount: subjectData.textbookCount || 0,
     };
     mockSubjects.push(newSubject);
     console.log('Added subject successfully (mock).');

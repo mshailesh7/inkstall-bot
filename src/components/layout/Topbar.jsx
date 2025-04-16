@@ -13,8 +13,8 @@ const Topbar = () => {
       display: 'flex', 
       justifyContent: 'center', // Center on larger screens
       alignItems: 'center', 
-      mb: 4,
-      mt: 2
+      // mb: 4,
+      mt: 5
     }}>
       <Typography 
         variant="h4" 
@@ -25,7 +25,7 @@ const Topbar = () => {
           textAlign: 'center', // Center the text
         }}
       >
-        Hi John, Welcome Back! 👋
+        {/* Hi John, Welcome Back! 👋 */}
       </Typography>
     </Box>
   );

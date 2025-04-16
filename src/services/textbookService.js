@@ -128,41 +128,54 @@ export const getTextbook = async (id) => {
 
 /**
  * Adds a new textbook to the backend.
- * @param {Object} textbookData - The data for the new textbook.
+ * @param {FormData} formData - The textbook form data including any files
  * @returns {Promise<Object>} Promise resolving to the created textbook
  */
-export const addTextbook = async (textbookData) => {
-    console.log('Adding textbook:', textbookData);
+export const addTextbook = async (formData) => {
+    console.log('Adding textbook from FormData');
     
     // --- MOCK IMPLEMENTATION (Replace with real API call) ---
-    await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
-    
-    // Validate input
-    if (!textbookData.title || !textbookData.author || !textbookData.publisher || !textbookData.subjectId) {
-        throw new Error("Title, author, publisher, and subject are required.");
-    }
-    
+    // Create a new textbook object
     const newTextbook = {
-        ...textbookData,
         id: String(nextId++),
         createdAt: new Date().toISOString(),
     };
-    
-    mockTextbooks.push(newTextbook);
-    console.log('Added textbook successfully (mock).');
-    return newTextbook;
-    // --- END MOCK ---
 
-    /* --- REAL API CALL ---
-    try {
-        const response = await apiClient.post('/textbooks', textbookData);
-        console.log('Added textbook successfully.');
-        return response.data;
-    } catch (error) {
-        console.error("Error adding textbook:", error);
-        throw new Error(error.response?.data?.message || "Could not add the textbook.");
+    // Process form data fields
+    for (const [key, value] of formData.entries()) {
+        // Handle file uploads separately
+        if (!(value instanceof File)) {
+            newTextbook[key] = value;
+        }
     }
-    */
+
+    // Handle file uploads
+    if (formData.has('coverImage')) {
+        const file = formData.get('coverImage');
+        console.log('Processing cover image:', file.name);
+        // In a real application, you would upload this file to a storage service
+        // For now, just store the filename as the URL
+        newTextbook.coverImageUrl = `mock-upload://${file.name}`;
+    }
+
+    if (formData.has('pdfFile')) {
+        const file = formData.get('pdfFile');
+        console.log('Processing PDF file:', file.name);
+        // In a real application, you would upload this file to a storage service
+        newTextbook.pdfUrl = `mock-upload://${file.name}`;
+    }
+
+    // Add to mock database
+    mockTextbooks.push(newTextbook);
+    
+    // Simulate network delay
+    return new Promise(resolve => {
+        setTimeout(() => {
+            console.log('Added textbook successfully:', newTextbook);
+            resolve(newTextbook);
+        }, 500); 
+    });
+    // --- END MOCK ---
 };
 
 /**

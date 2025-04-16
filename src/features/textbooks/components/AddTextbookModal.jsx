@@ -12,12 +12,14 @@ import Alert from '@mui/material/Alert';
 import Grid from '@mui/material/Grid';
 import InputAdornment from '@mui/material/InputAdornment';
 import Typography from '@mui/material/Typography';
+import ImageIcon from '@mui/icons-material/Image';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 
 const AddTextbookModal = ({
   open,
   subjectId,
   onClose,
-  onTextbookAdded,
+  onSuccess,
   addTextbook,
 }) => {
   // Form state
@@ -29,7 +31,13 @@ const AddTextbookModal = ({
     publicationYear: undefined,
     isbn: '',
     subjectId: subjectId,
-    coverImageUrl: '',
+  });
+  
+  // File upload state
+  const [files, setFiles] = useState({
+    coverImage: null,
+    coverImagePreview: null,
+    pdfFile: null
   });
   
   // Form validation state
@@ -66,6 +74,22 @@ const AddTextbookModal = ({
     }
   };
 
+  // Handle file upload
+  const handleFileUpload = (type, file) => {
+    setFiles(prev => ({
+      ...prev,
+      [type]: file
+    }));
+  };
+
+  // Handle file removal
+  const handleRemoveFile = (type) => {
+    setFiles(prev => ({
+      ...prev,
+      [type]: null
+    }));
+  };
+
   // Validate form before submission
   const validateForm = () => {
     const newErrors = {};
@@ -99,24 +123,39 @@ const AddTextbookModal = ({
 
   // Handle form submission
   const handleSubmit = async () => {
-    // Clear any previous API errors
     setApiError(null);
-    
-    // Validate form
-    if (!validateForm()) {
-      return;
-    }
-    
-    // Submit form
     setIsSubmitting(true);
+    
     try {
-      const newTextbook = await addTextbook({
-        ...formData,
-        subjectId: subjectId, // Ensure the correct subjectId is set
+      console.log("Starting form submission");
+      const formDataToSend = new FormData();
+      
+      // Add text fields
+      Object.entries(formData).forEach(([key, value]) => {
+        if (value !== null && value !== undefined && value !== '') {
+          formDataToSend.append(key, value);
+          console.log(`Added form field: ${key} = ${value}`);
+        }
       });
-      onTextbookAdded(newTextbook);
-      handleReset(); // Reset form after successful submission
+
+      // Add files if selected
+      if (files.coverImage) {
+        formDataToSend.append('coverImage', files.coverImage);
+        console.log(`Added cover image: ${files.coverImage.name}`);
+      }
+      if (files.pdfFile) {
+        formDataToSend.append('pdfFile', files.pdfFile);
+        console.log(`Added PDF: ${files.pdfFile.name}`);
+      }
+
+      console.log("Calling addTextbook service");
+      const newTextbook = await addTextbook(formDataToSend);
+      console.log("Textbook added successfully:", newTextbook);
+      
+      onSuccess(newTextbook);
+      handleClose();
     } catch (error) {
+      console.error("Error adding textbook:", error);
       setApiError(error.message || 'Failed to add textbook. Please try again.');
     } finally {
       setIsSubmitting(false);
@@ -133,7 +172,11 @@ const AddTextbookModal = ({
       publicationYear: undefined,
       isbn: '',
       subjectId: subjectId,
-      coverImageUrl: '',
+    });
+    setFiles({
+      coverImage: null,
+      coverImagePreview: null,
+      pdfFile: null
     });
     setErrors({});
     setApiError(null);
@@ -266,26 +309,104 @@ const AddTextbookModal = ({
               />
             </Grid>
             
-            <Grid item xs={12} sm={6}>
-              <TextField
-                margin="normal"
-                fullWidth
-                id="coverImageUrl"
-                label="Cover Image URL"
-                name="coverImageUrl"
-                autoComplete="off"
-                value={formData.coverImageUrl || ''}
-                onChange={handleChange}
-                disabled={isSubmitting}
-                placeholder="https://example.com/cover.jpg"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Typography variant="caption" sx={{ fontSize: '0.8rem' }}>URL:</Typography>
-                    </InputAdornment>
-                  ),
-                }}
-              />
+            <Grid item xs={12}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 2 }}>
+                <Typography variant="subtitle1">Upload Files</Typography>
+                
+                {/* Cover Image Upload */}
+                <Box>
+                  <Button
+                    variant="outlined"
+                    component="label"
+                    fullWidth
+                    sx={{ mb: 1 }}
+                    startIcon={<ImageIcon />}
+                  >
+                    Choose Cover Image
+                    <input
+                      type="file"
+                      hidden
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            setFiles(prev => ({
+                              ...prev,
+                              coverImage: file,
+                              coverImagePreview: reader.result
+                            }));
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                    />
+                  </Button>
+                  {files.coverImage && (
+                    <Box sx={{ display: 'flex', alignItems: 'center', mt: 1, gap: 2 }}>
+                      <img 
+                        src={files.coverImagePreview} 
+                        alt="Cover preview" 
+                        style={{ 
+                          maxWidth: '100px', 
+                          maxHeight: '100px', 
+                          objectFit: 'cover', 
+                          borderRadius: '4px'
+                        }}
+                      />
+                      <Box sx={{ flex: 1 }}>
+                        <Typography variant="caption">
+                          {files.coverImage.name}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {files.coverImage.size.toLocaleString()} bytes
+                        </Typography>
+                      </Box>
+                      <Button 
+                        size="small" 
+                        color="error" 
+                        onClick={() => handleRemoveFile('coverImage')}
+                      >
+                        Remove
+                      </Button>
+                    </Box>
+                  )}
+                </Box>
+
+                {/* PDF Upload */}
+                <Box sx={{ mt: 2 }}>
+                  <Button
+                    variant="outlined"
+                    component="label"
+                    fullWidth
+                    sx={{ mb: 1 }}
+                    startIcon={<PictureAsPdfIcon />}
+                  >
+                    Choose PDF File
+                    <input
+                      type="file"
+                      hidden
+                      accept="application/pdf"
+                      onChange={(e) => handleFileUpload('pdfFile', e.target.files[0])}
+                    />
+                  </Button>
+                  {files.pdfFile && (
+                    <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+                      <Typography variant="caption" sx={{ flex: 1 }}>
+                        {files.pdfFile.name}
+                      </Typography>
+                      <Button 
+                        size="small" 
+                        color="error" 
+                        onClick={() => handleRemoveFile('pdfFile')}
+                      >
+                        Remove
+                      </Button>
+                    </Box>
+                  )}
+                </Box>
+              </Box>
             </Grid>
           </Grid>
         </Box>
