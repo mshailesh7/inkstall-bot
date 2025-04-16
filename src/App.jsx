@@ -26,7 +26,7 @@ function App() {
         >
           <Route index element={<DashboardPage />} />
           <Route path="subjects" element={<SubjectsPage />} />
-
+          <Route path="/subjects/:subjectId/textbooks" element={<TextbookListPage />} />
           <Route path="generator" element={<PaperGeneratorPage />} />
           <Route path="library" element={<LibraryPage />} />
           <Route path="corrections" element={<CorrectionsPage />} />
