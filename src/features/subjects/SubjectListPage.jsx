@@ -10,6 +10,11 @@ import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { useNavigate } from 'react-router-dom';
 import Paper from '@mui/material/Paper';
 import CircularProgress from '@mui/material/CircularProgress';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import NavigateNextIcon from '@mui/icons-material/NavigateNext';
+import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
+import Pagination from '@mui/material/Pagination';
+import PaginationItem from '@mui/material/PaginationItem';
 
 import { getSubjects, addSubject, updateSubject, deleteSubject } from '../../services/subjectService';
 import SubjectTable from './components/SubjectTable';
@@ -21,10 +26,9 @@ const SubjectListPage = () => {
   const [subjects, setSubjects] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  // Added eslint-disable comment to address the unused variable warning
-  // eslint-disable-next-line no-unused-vars
   const [retryCount, setRetryCount] = useState(0);
   const [isRetrying, setIsRetrying] = useState(false);
+  const [page, setPage] = useState(1);
 
   // Modal and dialog states
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -108,7 +112,9 @@ const SubjectListPage = () => {
 
   const handleSubjectUpdated = (updatedSubject) => {
     setSubjects(prevSubjects =>
-      prevSubjects.map(subject => subject.id === updatedSubject.id ? updatedSubject : subject)
+      prevSubjects.map(subject =>
+        subject.id === updatedSubject.id ? updatedSubject : subject
+      )
     );
     handleCloseEditModal();
     setSnackbar({ open: true, message: `Subject "${updatedSubject.name}" updated successfully!`, severity: 'success' });
@@ -116,9 +122,6 @@ const SubjectListPage = () => {
 
   // Handlers for Delete Subject
   const handleDeleteSubject = (subjectId) => {
-    const subject = subjects.find(s => s.id === subjectId);
-    if (!subject) return;
-
     setSubjectToDelete(subjectId);
     setIsDeleteDialogOpen(true);
   };
@@ -156,6 +159,10 @@ const SubjectListPage = () => {
     setSnackbar(null);
   };
 
+  const handlePageChange = (event, value) => {
+    setPage(value);
+  };
+
   const renderErrorState = () => (
     <Paper elevation={2} sx={{ p: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', borderRadius: 2, backgroundColor: 'rgba(255, 0, 0, 0.05)', mb: 3 }}>
       <ErrorOutlineIcon color="error" sx={{ fontSize: 60, mb: 2 }} />
@@ -178,26 +185,74 @@ const SubjectListPage = () => {
   );
 
   return (
-    <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4">Subjects</Typography>
-        <Button variant="contained" color="primary" startIcon={<AddIcon />} onClick={handleAddSubjectClick}>
-          Add Subject
+    <Box sx={{ 
+      p: 3,
+      height: 'calc(100vh - 120px)',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center'
+    }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Typography variant="h5" sx={{ color: '#1a1a1a', fontWeight: 500 }}>
+          Subjects
+        </Typography>
+        <Button 
+          variant="contained" 
+          startIcon={<AddIcon sx={{ color: '#000' }} />}
+          endIcon={<ChevronRightIcon sx={{ color: '#fff' }} />}
+          onClick={handleAddSubjectClick}
+          sx={{
+            bgcolor: '#fff',
+            color: '#000',
+            textTransform: 'none',
+            px: 2,
+            py: 1,
+            borderRadius: 1,
+            '&:hover': {
+              bgcolor: '#f5f5f5'
+            },
+            '& .MuiButton-endIcon': {
+              bgcolor: '#3f88f5',
+              borderRadius: '50%',
+              p: 0.5,
+              ml: 1
+            }
+          }}
+        >
+          Create New Paper
         </Button>
       </Box>
 
       {error && !isLoading && renderErrorState()}
 
       {(!error || isLoading) && (
-        <SubjectTable
-          subjects={subjects}
-          isLoading={isLoading}
-          onEdit={handleEditSubject}
-          onDelete={handleDeleteSubject}
-          onManageTextbooks={handleManageTextbooks}
-        />
+        <Box sx={{ 
+          flexGrow: 1,
+          display: 'flex',
+          flexDirection: 'column'
+        }}>
+          <Paper 
+            elevation={0} 
+            sx={{ 
+              borderRadius: 2,
+              border: '1px solid #e0e0e0',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+              overflow: 'visible',
+              mb: 2
+            }}
+          >
+            <SubjectTable
+              subjects={subjects}
+              isLoading={isLoading}
+              onEdit={handleEditSubject}
+              onDelete={handleDeleteSubject}
+              onManageTextbooks={handleManageTextbooks}
+              page={page}
+              onPageChange={handlePageChange}
+            />
+          </Paper>
+        </Box>
       )}
-
       <AddSubjectModal
         open={isAddModalOpen}
         onClose={handleCloseAddModal}

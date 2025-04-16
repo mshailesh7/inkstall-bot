@@ -10,6 +10,7 @@ import CorrectionsPage from './features/corrections/CorrectionsPage';
 import SettingsPage from './features/settings/SettingsPage';
 import PrivateRoute from './components/PrivateRoute';
 
+import TextbookListPage from './features/textbooks/TextbookListPage';
 
 function App() {
   return (

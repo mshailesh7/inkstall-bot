@@ -13,6 +13,7 @@ const AddSubjectModal = ({ open, onClose, onSubjectAdded, addSubject }) => {
   const [formData, setFormData] = useState({
     name: '',
     code: '',
+    textbookCount: 0
   });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -20,7 +21,7 @@ const AddSubjectModal = ({ open, onClose, onSubjectAdded, addSubject }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ ...prev, [name]: name === 'textbookCount' ? parseInt(value) || 0 : value }));
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: undefined }));
     }
@@ -33,6 +34,9 @@ const AddSubjectModal = ({ open, onClose, onSubjectAdded, addSubject }) => {
       newErrors.code = 'IGCSE code is required';
     } else if (!/^\d{4}$/.test(formData.code)) {
       newErrors.code = 'IGCSE code must be a 4-digit number';
+    }
+    if (formData.textbookCount < 0) {
+      newErrors.textbookCount = 'Textbook count cannot be negative';
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -54,7 +58,7 @@ const AddSubjectModal = ({ open, onClose, onSubjectAdded, addSubject }) => {
   };
 
   const handleReset = () => {
-    setFormData({ name: '', code: '' });
+    setFormData({ name: '', code: '', textbookCount: 0 });
     setErrors({});
     setApiError(null);
   };
@@ -103,6 +107,21 @@ const AddSubjectModal = ({ open, onClose, onSubjectAdded, addSubject }) => {
             helperText={errors.code || "The 4-digit code assigned by Cambridge Assessment International Education"}
             disabled={isSubmitting}
             inputProps={{ maxLength: 4 }}
+          />
+          <TextField
+            margin="normal"
+            fullWidth
+            id="textbookCount"
+            label="Number of Textbooks"
+            name="textbookCount"
+            type="number"
+            autoComplete="off"
+            value={formData.textbookCount}
+            onChange={handleChange}
+            error={!!errors.textbookCount}
+            helperText={errors.textbookCount}
+            disabled={isSubmitting}
+            InputProps={{ inputProps: { min: 0 } }}
           />
         </Box>
       </DialogContent>

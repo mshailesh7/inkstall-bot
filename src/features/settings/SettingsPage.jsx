@@ -95,172 +95,220 @@ const SettingsPage = () => {
   };
   
   return (
-    <Box>
-      <Typography variant="h4" gutterBottom>
+    <Box sx={{ 
+      bgcolor: '#f0f7ff', 
+      minHeight: '100vh', 
+      p: 3,
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center'
+    }}>
+      <Typography variant="h5" gutterBottom sx={{ alignSelf: 'flex-start', mb: 3 }}>
         Settings
       </Typography>
       
-      <Grid container spacing={4}>
+      <Grid container spacing={3} sx={{ maxWidth: 1200, mx: 'auto' }}>
         {/* Profile Settings */}
         <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 3 }}>
+          <Paper sx={{ 
+            p: 3, 
+            borderRadius: 2, 
+            boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+            height: '100%'
+          }}>
             <Typography variant="h6" gutterBottom>
               Profile Settings
             </Typography>
             
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-              <Avatar
-                sx={{ width: 80, height: 80, mr: 2 }}
-                alt={profileData.name}
-                src="/static/images/avatar/1.jpg"
-              />
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
+              <Box sx={{ position: 'relative', mr: 2 }}>
+                <Avatar
+                  sx={{ 
+                    width: 70, 
+                    height: 70,
+                    bgcolor: '#333'
+                  }}
+                  alt={profileData.name}
+                  src="/static/images/avatar/1.jpg"
+                />
+              </Box>
               <Box>
-                <Typography variant="body1">
+                <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
                   {profileData.name}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   {profileData.role}
                 </Typography>
-                <IconButton 
+                <Typography 
+                  variant="body2" 
                   color="primary" 
-                  aria-label="upload picture" 
-                  component="label"
-                  size="small"
-                  sx={{ mt: 1 }}
+                  sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center',
+                    fontSize: '0.8rem',
+                    mt: 0.5
+                  }}
                 >
-                  <input hidden accept="image/*" type="file" />
-                  <PhotoCamera fontSize="small" />
-                  <Typography variant="caption" sx={{ ml: 0.5 }}>
-                    Change Photo
-                  </Typography>
-                </IconButton>
+                  <PhotoCamera fontSize="small" sx={{ mr: 0.5, fontSize: '0.9rem' }} />
+                  Change Photo
+                </Typography>
               </Box>
             </Box>
             
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Full Name"
-                  value={profileData.name}
-                  onChange={(e) => handleProfileChange('name', e.target.value)}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Email Address"
-                  type="email"
-                  value={profileData.email}
-                  onChange={(e) => handleProfileChange('email', e.target.value)}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Role"
-                  value={profileData.role}
-                  disabled
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <Button
-                  variant="contained"
-                  startIcon={<SaveIcon />}
-                  onClick={handleSaveProfile}
-                >
-                  Save Profile
-                </Button>
-              </Grid>
-            </Grid>
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 'medium' }}>
+                Full Name
+              </Typography>
+              <TextField
+                fullWidth
+                variant="outlined"
+                size="small"
+                value={profileData.name}
+                onChange={(e) => handleProfileChange('name', e.target.value)}
+                sx={{ 
+                  mt: 0.5,
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 1
+                  }
+                }}
+              />
+            </Box>
+            
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 'medium' }}>
+                Email ID
+              </Typography>
+              <TextField
+                fullWidth
+                variant="outlined"
+                size="small"
+                type="email"
+                value={profileData.email}
+                onChange={(e) => handleProfileChange('email', e.target.value)}
+                sx={{ 
+                  mt: 0.5,
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 1
+                  }
+                }}
+              />
+            </Box>
+            
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 'medium' }}>
+                Role
+              </Typography>
+              <TextField
+                fullWidth
+                variant="outlined"
+                size="small"
+                value={profileData.role}
+                disabled
+                sx={{ 
+                  mt: 0.5,
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 1
+                  }
+                }}
+              />
+            </Box>
+            
+            <Button
+              variant="contained"
+              startIcon={<SaveIcon />}
+              onClick={handleSaveProfile}
+              sx={{ 
+                bgcolor: '#3f88f5', 
+                borderRadius: 1,
+                textTransform: 'none',
+                px: 2
+              }}
+            >
+              Save Profile
+            </Button>
           </Paper>
         </Grid>
         
         {/* Password Settings */}
         <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 3 }}>
+          <Paper sx={{ 
+            p: 3, 
+            borderRadius: 2, 
+            boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+            height: '100%'
+          }}>
             <Typography variant="h6" gutterBottom>
               Change Password
             </Typography>
             
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Current Password"
-                  type="password"
-                  value={passwordData.currentPassword}
-                  onChange={(e) => handlePasswordChange('currentPassword', e.target.value)}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="New Password"
-                  type="password"
-                  value={passwordData.newPassword}
-                  onChange={(e) => handlePasswordChange('newPassword', e.target.value)}
-                  helperText="Password must be at least 8 characters long"
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Confirm New Password"
-                  type="password"
-                  value={passwordData.confirmPassword}
-                  onChange={(e) => handlePasswordChange('confirmPassword', e.target.value)}
-                  error={passwordData.newPassword !== passwordData.confirmPassword && passwordData.confirmPassword !== ''}
-                  helperText={passwordData.newPassword !== passwordData.confirmPassword && passwordData.confirmPassword !== '' ? 'Passwords do not match' : ''}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <Button
-                  variant="contained"
-                  color="secondary"
-                  startIcon={<LockIcon />}
-                  onClick={handleChangePassword}
-                  disabled={!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword}
-                >
-                  Change Password
-                </Button>
-              </Grid>
-            </Grid>
-          </Paper>
-        </Grid>
-        
-        {/* Admin Settings (Optional) */}
-        <Grid item xs={12}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              System Settings
-            </Typography>
-            <Divider sx={{ mb: 2 }} />
-            
-            <Alert severity="info" sx={{ mb: 2 }}>
-              These settings are only available to administrators.
-            </Alert>
-            
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label="Google Vision API Key"
-                  type="password"
-                  value="••••••••••••••••••••••••••••••"
-                  disabled
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label="OpenAI API Key"
-                  type="password"
-                  value="••••••••••••••••••••••••••••••"
-                  disabled
-                />
-              </Grid>
-            </Grid>
+            <Box sx={{ mb: 2, mt: 4 }}>
+              <TextField
+                fullWidth
+                label="Current Password"
+                type="password"
+                variant="outlined"
+                size="small"
+                value={passwordData.currentPassword}
+                onChange={(e) => handlePasswordChange('currentPassword', e.target.value)}
+                sx={{ 
+                  mb: 2,
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 1
+                  }
+                }}
+              />
+              
+              <TextField
+                fullWidth
+                label="New Password"
+                type="password"
+                variant="outlined"
+                size="small"
+                value={passwordData.newPassword}
+                onChange={(e) => handlePasswordChange('newPassword', e.target.value)}
+                sx={{ 
+                  mb: 0.5,
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 1
+                  }
+                }}
+              />
+              <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 2 }}>
+                Password must be at least 8 characters long
+              </Typography>
+              
+              <TextField
+                fullWidth
+                label="Confirm New Password"
+                type="password"
+                variant="outlined"
+                size="small"
+                value={passwordData.confirmPassword}
+                onChange={(e) => handlePasswordChange('confirmPassword', e.target.value)}
+                error={passwordData.newPassword !== passwordData.confirmPassword && passwordData.confirmPassword !== ''}
+                sx={{ 
+                  mb: 3,
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 1
+                  }
+                }}
+              />
+              
+              <Button
+                variant="contained"
+                startIcon={<LockIcon />}
+                onClick={handleChangePassword}
+                disabled={!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword}
+                sx={{ 
+                  bgcolor: '#3f88f5', 
+                  borderRadius: 1,
+                  textTransform: 'none',
+                  px: 2
+                }}
+              >
+                Change Password
+              </Button>
+            </Box>
           </Paper>
         </Grid>
       </Grid>

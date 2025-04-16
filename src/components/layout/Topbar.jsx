@@ -10,10 +10,21 @@ const Topbar = () => {
       display: 'flex', 
       justifyContent: 'center', // Center on larger screens
       alignItems: 'center', 
-      mb: 4,
-      mt: 2
+      // mb: 4,
+      mt: 5
     }}>
 
+      <Typography 
+        variant="h4" 
+        component="h1" 
+        sx={{ 
+          fontWeight: 'bold', 
+          color: 'text.primary',
+          textAlign: 'center', // Center the text
+        }}
+      >
+        {/* Hi John, Welcome Back! 👋 */}
+      </Typography>
     </Box>
   );
 };

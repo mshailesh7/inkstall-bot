@@ -265,7 +265,7 @@ const TextbookListPage = () => {
           open={isAddModalOpen}
           subjectId={subjectId}
           onClose={handleCloseAddModal}
-          onTextbookAdded={handleTextbookAdded}
+          onSuccess={handleTextbookAdded}
           addTextbook={addTextbook}
         />
       )}
