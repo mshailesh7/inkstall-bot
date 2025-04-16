@@ -10,6 +10,9 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import theme from '../../styles/theme';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
+import Badge from '@mui/material/Badge';
+import NotificationsIcon from '@mui/icons-material/Notifications';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 
 const AppLayout = () => {
   const theme = useTheme();
@@ -43,31 +46,68 @@ const AppLayout = () => {
         {/* Sidebar */}
         <Sidebar open={sidebarOpen} onToggle={toggleSidebar} />
         
-        {/* Hamburger menu button - Position relative to content */}
-        <IconButton
-          aria-label="toggle sidebar"
-          onClick={toggleSidebar}
+        {/* Header bar with hamburger, notification and profile icons */}
+        <Box
           sx={{
             position: 'fixed',
-            top: 16,
-            // Position hamburger button relative to content
+            top: 0,
             left: { 
-              xs: 16, 
-              md: sidebarOpen ? `calc(var(--sidebar-width) + 8px)`: 16
+              xs: 0, 
+              md: sidebarOpen ? `var(--sidebar-width)`: 0
             },
+            right: 0,
             zIndex: 1200,
-            bgcolor: 'white',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-            transition: 'left 0.3s ease',
-            width: 40,
-            height: 40,
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
+            justifyContent: 'space-between',
+            transition: 'left 0.3s ease',
+            padding: '8px 16px',
+            backgroundColor: '#c3e0ff',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
           }}
         >
-          <MenuIcon />
-        </IconButton>
+          {/* Hamburger menu button */}
+          <IconButton
+            aria-label="toggle sidebar"
+            onClick={toggleSidebar}
+            sx={{
+              bgcolor: 'white',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+              width: 40,
+              height: 40,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <MenuIcon />
+          </IconButton>
+          
+          {/* User actions */}
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <IconButton 
+              sx={{
+                bgcolor: 'white',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                width: 40,
+                height: 40,
+              }}
+            >
+              <Badge badgeContent={1} color="error">
+                <NotificationsIcon />
+              </Badge>
+            </IconButton>
+            <IconButton 
+              sx={{
+                bgcolor: 'white',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                width: 40,
+                height: 40,
+              }}
+            >
+              <AccountCircleIcon />
+            </IconButton>
+          </Box>
+        </Box>
         
         {/* Main content area - Shift when sidebar is open */}
         <Box 
@@ -91,10 +131,17 @@ const AppLayout = () => {
         >
           {/* Content with proper spacing for the hamburger button */}
           <Box sx={{ 
-            pt: 7, // Space for fixed hamburger button
+            pt: 5, // Reduced space for fixed header bar
             px: 2
           }}>
-            <Topbar />
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'space-between',
+              pb: 0
+            }}>
+              <Topbar />
+            </Box>
             <Outlet />
           </Box>
         </Box>

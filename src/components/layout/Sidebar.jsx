@@ -4,6 +4,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import Drawer from "@mui/material/Drawer";
+import LogoutIcon from '@mui/icons-material/Logout';
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 import AssignmentIcon from "@mui/icons-material/Assignment";
@@ -64,6 +65,21 @@ const Sidebar = ({ open, onToggle }) => {
         padding: 2,
         height: "100%",
         bgcolor: "white",
+        overflow: "auto", // Add scrollbar when content overflows
+        '&::-webkit-scrollbar': {
+          width: '8px',
+        },
+        '&::-webkit-scrollbar-track': {
+          background: '#f1f1f1',
+          borderRadius: '4px',
+        },
+        '&::-webkit-scrollbar-thumb': {
+          background: '#c3e0ff',
+          borderRadius: '4px',
+        },
+        '&::-webkit-scrollbar-thumb:hover': {
+          background: '#8bc4ff',
+        }
       }}
     >
       {/* Logo */}
@@ -88,9 +104,8 @@ const Sidebar = ({ open, onToggle }) => {
           startIcon={item.icon}
           onClick={() => {
             navigate(item.path);
-            if (window.innerWidth < 960) {
-              onToggle();
-            }
+            // Always close sidebar when an item is clicked, regardless of screen size
+            onToggle();
           }}
           sx={{
             justifyContent: "flex-start",
@@ -116,9 +131,8 @@ const Sidebar = ({ open, onToggle }) => {
         startIcon={settingsItem.icon}
         onClick={() => {
           navigate(settingsItem.path);
-          if (window.innerWidth < 960) {
-            onToggle();
-          }
+          // Always close sidebar when settings is clicked
+          onToggle();
         }}
         sx={{
           justifyContent: "flex-start",
@@ -138,6 +152,28 @@ const Sidebar = ({ open, onToggle }) => {
         }}
       >
         {settingsItem.label}
+      </Button>
+      {/* Logout Button */}
+      <Button
+        fullWidth
+        startIcon={<LogoutIcon />}
+        onClick={() => {
+          localStorage.removeItem('user');
+          navigate('/login');
+        }}
+        sx={{
+          justifyContent: 'flex-start',
+          p: '12px 16px',
+          borderRadius: 2,
+          bgcolor: '#ffebee',
+          color: '#c62828',
+          mt: 1,
+          '&:hover': {
+            bgcolor: '#ffcdd2',
+          },
+        }}
+      >
+        Logout
       </Button>
     </Box>
   );
