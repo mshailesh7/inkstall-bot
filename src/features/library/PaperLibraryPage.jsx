@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import Table from '@mui/material/Table';
@@ -8,17 +7,23 @@ import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
-import TablePagination from '@mui/material/TablePagination';
-import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
-import Chip from '@mui/material/Chip';
 import TextField from '@mui/material/TextField';
 import InputAdornment from '@mui/material/InputAdornment';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import GetAppIcon from '@mui/icons-material/GetApp';
-import FactCheckIcon from '@mui/icons-material/FactCheck';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import SearchIcon from '@mui/icons-material/Search';
+import Button from '@mui/material/Button';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useTheme } from '@mui/material/styles';
+import Accordion from '@mui/material/Accordion';
+import AccordionSummary from '@mui/material/AccordionSummary';
+import AccordionDetails from '@mui/material/AccordionDetails';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import Typography from '@mui/material/Typography';
+import Pagination from '@mui/material/Pagination';
 
 // Mock data for generated papers
 const mockPapers = [
@@ -65,22 +70,15 @@ const mockPapers = [
 ];
 
 const PaperLibraryPage = () => {
-  const [papers, setPapers] = useState(mockPapers);
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [papers] = useState(mockPapers);
+  const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
+  const theme = useTheme();
+  const isMobileOrTablet = useMediaQuery(theme.breakpoints.down('md'));
+  const itemsPerPage = 5;
 
-  const handleChangePage = (event, newPage) => {
+  const handlePageChange = (event, newPage) => {
     setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
-
-  const handleDeletePaper = (id) => {
-    setPapers(papers.filter(paper => paper.id !== id));
   };
 
   const filteredPapers = papers.filter(paper => 
@@ -88,32 +86,23 @@ const PaperLibraryPage = () => {
     paper.subject.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  return (
+  const pageCount = Math.ceil(filteredPapers.length / itemsPerPage);
+  const startIndex = (page - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+
+  const TableView = () => (
     <Box>
-      <Typography variant="h4" gutterBottom>
-        Paper Library
-      </Typography>
-      
-      <Box sx={{ mb: 3 }}>
-        <TextField
-          fullWidth
-          placeholder="Search papers by title or subject..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            ),
-          }}
-        />
-      </Box>
-      
-      <TableContainer component={Paper}>
+      <TableContainer>
         <Table>
           <TableHead>
-            <TableRow>
+            <TableRow sx={{ 
+              backgroundColor: '#ffff',
+              '& th': { 
+                fontWeight: 'bold',
+                color: '#333',
+                borderBottom: '2px solid #a4cafe',
+              }
+            }}>
               <TableCell>Title</TableCell>
               <TableCell>Subject</TableCell>
               <TableCell>Date Created</TableCell>
@@ -124,50 +113,41 @@ const PaperLibraryPage = () => {
           </TableHead>
           <TableBody>
             {filteredPapers
-              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+              .slice(startIndex, endIndex)
               .map((paper) => (
-                <TableRow key={paper.id}>
+                <TableRow key={paper.id} sx={{ 
+                  '&:hover': { backgroundColor: '#f9f9f9' },
+                  borderBottom: '2px solid #a4cafe',
+                }}>
                   <TableCell>{paper.title}</TableCell>
                   <TableCell>
-                    <Chip 
-                      label={paper.subject} 
-                      size="small" 
-                      color="primary" 
-                      variant="outlined"
-                    />
+                    <Box sx={{ 
+                      display: 'inline-block',
+                      bgcolor: '#ffff', 
+                      color: '#0066cc',
+                      border: '1px solid #2e3a59',
+                      borderRadius: '4px',
+                      padding: '2px 8px',
+                      fontSize: '14px'
+                    }}>
+                      {paper.subject}
+                    </Box>
                   </TableCell>
-                  <TableCell>{new Date(paper.dateCreated).toLocaleDateString()}</TableCell>
+                  <TableCell>{paper.dateCreated}</TableCell>
                   <TableCell>{paper.questionCount}</TableCell>
                   <TableCell>{paper.totalMarks}</TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex' }}>
-                      <IconButton 
-                        color="primary" 
-                        title="Edit Paper"
-                        size="small"
-                      >
+                      <IconButton size="small" sx={{ color: '#4dabf5' }}>
                         <EditIcon />
                       </IconButton>
-                      <IconButton 
-                        color="primary"
-                        title="Download PDF"
-                        size="small"
-                      >
+                      <IconButton size="small" sx={{ color: '#4dabf5' }}>
                         <GetAppIcon />
                       </IconButton>
-                      <IconButton 
-                        color="secondary"
-                        title="Start Correction"
-                        size="small"
-                      >
-                        <FactCheckIcon />
+                      <IconButton size="small" sx={{ color: '#4dabf5' }}>
+                        <VisibilityIcon />
                       </IconButton>
-                      <IconButton 
-                        color="error" 
-                        onClick={() => handleDeletePaper(paper.id)}
-                        title="Delete Paper"
-                        size="small"
-                      >
+                      <IconButton size="small" sx={{ color: '#f44336' }}>
                         <DeleteIcon />
                       </IconButton>
                     </Box>
@@ -176,32 +156,185 @@ const PaperLibraryPage = () => {
               ))}
             {filteredPapers.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} align="center">
-                  <Typography variant="body1" sx={{ py: 2 }}>
-                    No papers found
-                  </Typography>
+                <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
+                  No papers found
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
-        <TablePagination
-          rowsPerPageOptions={[5, 10, 25]}
-          component="div"
-          count={filteredPapers.length}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={handleChangePage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-        />
       </TableContainer>
+      <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+        <Pagination 
+          count={pageCount} 
+          page={page} 
+          onChange={handlePageChange}
+          variant="outlined" 
+          color="primary"
+          size={isMobileOrTablet ? "small" : "medium"}
+        />
+      </Box>
+    </Box>
+  );
+
+  const AccordionView = () => (
+    <Box>
+      {filteredPapers
+        .slice(startIndex, endIndex)
+        .map((paper) => (
+          <Accordion key={paper.id} sx={{ mb: 1, borderRadius: '4px !important' }}>
+            <AccordionSummary
+              expandIcon={<ExpandMoreIcon />}
+              sx={{ 
+                backgroundColor: '#f8fafc',
+                borderBottom: '1px solid #e2e8f0'
+              }}
+            >
+              <Box sx={{ width: '100%' }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                  {paper.title}
+                </Typography>
+                <Box sx={{ 
+                  display: 'inline-block',
+                  bgcolor: '#ffff', 
+                  color: '#0066cc',
+                  border: '1px solid #2e3a59',
+                  borderRadius: '4px',
+                  padding: '2px 8px',
+                  fontSize: '14px',
+                  mt: 1
+                }}>
+                  {paper.subject}
+                </Box>
+              </Box>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography variant="body2" color="text.secondary">Date Created:</Typography>
+                  <Typography variant="body2">{paper.dateCreated}</Typography>
+                </Box>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography variant="body2" color="text.secondary">Questions:</Typography>
+                  <Typography variant="body2">{paper.questionCount}</Typography>
+                </Box>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography variant="body2" color="text.secondary">Total Marks:</Typography>
+                  <Typography variant="body2">{paper.totalMarks}</Typography>
+                </Box>
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 1 }}>
+                  <IconButton size="small" sx={{ color: '#4dabf5' }}>
+                    <EditIcon />
+                  </IconButton>
+                  <IconButton size="small" sx={{ color: '#4dabf5' }}>
+                    <GetAppIcon />
+                  </IconButton>
+                  <IconButton size="small" sx={{ color: '#4dabf5' }}>
+                    <VisibilityIcon />
+                  </IconButton>
+                  <IconButton size="small" sx={{ color: '#f44336' }}>
+                    <DeleteIcon />
+                  </IconButton>
+                </Box>
+              </Box>
+            </AccordionDetails>
+          </Accordion>
+        ))}
+      {filteredPapers.length === 0 && (
+        <Box sx={{ textAlign: 'center', py: 3 }}>
+          No papers found
+        </Box>
+      )}
+      <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+        <Pagination 
+          count={pageCount} 
+          page={page} 
+          onChange={handlePageChange}
+          variant="outlined" 
+          color="primary"
+          size={isMobileOrTablet ? "small" : "medium"}
+        />
+      </Box>
+    </Box>
+  );
+
+  return (
+    <Box sx={{ 
+      bgcolor: '#cfe8ff', 
+      minHeight: '100vh', 
+      padding: '20px',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '20px',
+      pb: '60px'
+    }}>
+      <Box sx={{ 
+        fontSize: '24px', 
+        fontWeight: 'bold',
+        color: '#333',
+        mb: 2
+      }}>
+        Question Paper Generator
+      </Box>
       
-      <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
+      <Box sx={{ 
+        width: '100%', 
+        bgcolor: 'white', 
+        borderRadius: '8px',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+        padding: '8px 16px',
+        display: 'flex',
+        alignItems: 'center',
+        border: '2px solid #a4cafe',
+      }}>
+        <SearchIcon sx={{ color: '#666', mr: 1 }} />
+        <TextField
+          fullWidth
+          variant="standard"
+          placeholder="Search papers by title or subject..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          InputProps={{
+            disableUnderline: true,
+          }}
+          sx={{
+            '& .MuiInputBase-input': {
+              padding: '8px 0',
+            }
+          }}
+        />
+      </Box>
+      
+      <Paper sx={{ 
+        width: '100%', 
+        overflow: 'hidden',
+        borderRadius: '8px',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+        mb: 3
+      }}>
+        {isMobileOrTablet ? <AccordionView /> : <TableView />}
+      </Paper>
+      
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'flex-end',
+        position: 'sticky',
+        bottom: 20,
+        right: 20,
+        zIndex: 1
+      }}>
         <Button 
           variant="contained"
-          onClick={() => window.location.href = '/generator'}
+          sx={{ 
+            bgcolor: '#8bc4ff', 
+            '&:hover': { bgcolor: '#2196f3' },
+            borderRadius: '4px',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+            minWidth: '120px', 
+            py: 1
+          }}
         >
-          Generate New Paper
+          Download
         </Button>
       </Box>
     </Box>

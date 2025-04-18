@@ -96,17 +96,21 @@ const SettingsPage = () => {
   
   return (
     <Box sx={{ 
-      bgcolor: '#f0f7ff', 
+      // bgcolor: '#f0f7ff', 
       minHeight: '100vh', 
       p: 3,
       display: 'flex',
       flexDirection: 'column',
-      alignItems: 'center'
+      alignItems: 'start'
     }}>
-      <Typography variant="h5" gutterBottom sx={{ alignSelf: 'flex-start', mb: 3 }}>
-        Settings
-      </Typography>
-      
+      <Box sx={{ 
+        fontSize: '24px', 
+        fontWeight: 'bold',
+        color: '#333',
+        mb: 2
+      }}>
+        Setting
+      </Box>
       <Grid container spacing={3} sx={{ maxWidth: 1200, mx: 'auto' }}>
         {/* Profile Settings */}
         <Grid item xs={12} md={6}>
@@ -235,79 +239,88 @@ const SettingsPage = () => {
             p: 3, 
             borderRadius: 2, 
             boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-            height: '100%'
+            height: '80%',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            '@media (max-width: 450px)': {
+              // minHeight: '350px',
+              height: 'auto'
+            }
           }}>
-            <Typography variant="h6" gutterBottom>
-              Change Password
-            </Typography>
-            
-            <Box sx={{ mb: 2, mt: 4 }}>
-              <TextField
-                fullWidth
-                label="Current Password"
-                type="password"
-                variant="outlined"
-                size="small"
-                value={passwordData.currentPassword}
-                onChange={(e) => handlePasswordChange('currentPassword', e.target.value)}
-                sx={{ 
-                  mb: 2,
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 1
-                  }
-                }}
-              />
-              
-              <TextField
-                fullWidth
-                label="New Password"
-                type="password"
-                variant="outlined"
-                size="small"
-                value={passwordData.newPassword}
-                onChange={(e) => handlePasswordChange('newPassword', e.target.value)}
-                sx={{ 
-                  mb: 0.5,
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 1
-                  }
-                }}
-              />
-              <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 2 }}>
-                Password must be at least 8 characters long
+            <Box>
+              <Typography variant="h6" gutterBottom>
+                Change Password
               </Typography>
               
-              <TextField
-                fullWidth
-                label="Confirm New Password"
-                type="password"
-                variant="outlined"
-                size="small"
-                value={passwordData.confirmPassword}
-                onChange={(e) => handlePasswordChange('confirmPassword', e.target.value)}
-                error={passwordData.newPassword !== passwordData.confirmPassword && passwordData.confirmPassword !== ''}
-                sx={{ 
-                  mb: 3,
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 1
-                  }
-                }}
-              />
-              
-              <Button
-                variant="contained"
-                startIcon={<LockIcon />}
-                onClick={handleChangePassword}
-                disabled={!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword}
-                sx={{ 
-                  bgcolor: '#3f88f5', 
-                  borderRadius: 1,
-                  textTransform: 'none',
-                  px: 2
-                }}
-              >
-                Change Password
-              </Button>
+              <Box sx={{ mb: 2, mt: 4 }}>
+                <TextField
+                  fullWidth
+                  label="Current Password"
+                  type="password"
+                  variant="outlined"
+                  size="small"
+                  value={passwordData.currentPassword}
+                  onChange={(e) => handlePasswordChange('currentPassword', e.target.value)}
+                  sx={{ 
+                    mb: 2,
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 1
+                    }
+                  }}
+                />
+                
+                <TextField
+                  fullWidth
+                  label="New Password"
+                  type="password"
+                  variant="outlined"
+                  size="small"
+                  value={passwordData.newPassword}
+                  onChange={(e) => handlePasswordChange('newPassword', e.target.value)}
+                  sx={{ 
+                    mb: 0.5,
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 1
+                    }
+                  }}
+                />
+                <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 2 }}>
+                  Password must be at least 8 characters long
+                </Typography>
+                
+                <TextField
+                  fullWidth
+                  label="Confirm New Password"
+                  type="password"
+                  variant="outlined"
+                  size="small"
+                  value={passwordData.confirmPassword}
+                  onChange={(e) => handlePasswordChange('confirmPassword', e.target.value)}
+                  error={passwordData.newPassword !== passwordData.confirmPassword && passwordData.confirmPassword !== ''}
+                  sx={{ 
+                    mb: 3,
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 1
+                    }
+                  }}
+                />
+                
+                <Button
+                  variant="contained"
+                  startIcon={<LockIcon />}
+                  onClick={handleChangePassword}
+                  disabled={!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword}
+                  sx={{ 
+                    bgcolor: '#3f88f5', 
+                    borderRadius: 1,
+                    textTransform: 'none',
+                    px: 2
+                  }}
+                >
+                  Change Password
+                </Button>
+              </Box>
             </Box>
           </Paper>
         </Grid>

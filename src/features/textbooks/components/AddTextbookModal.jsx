@@ -141,6 +141,8 @@ const AddTextbookModal = ({
       // Add files if selected
       if (files.coverImage) {
         formDataToSend.append('coverImage', files.coverImage);
+        // Pass the data URL separately since FormData can't properly serialize it
+        formDataToSend.append('coverImageDataUrl', files.coverImagePreview);
         console.log(`Added cover image: ${files.coverImage.name}`);
       }
       if (files.pdfFile) {
@@ -192,7 +194,7 @@ const AddTextbookModal = ({
     <Dialog 
       open={open} 
       onClose={handleClose}
-      maxWidth="md"
+      maxWidth="sm"
       fullWidth
     >
       <DialogTitle>Add New Textbook</DialogTitle>
@@ -206,13 +208,14 @@ const AddTextbookModal = ({
         
         <Box component="form" noValidate sx={{ mt: 1 }}>
           <Grid container spacing={2}>
-            <Grid item xs={12}>
+            {/* Title and Author on same line */}
+            <Grid item xs={6}>
               <TextField
-                margin="normal"
+                size="small"
                 required
                 fullWidth
                 id="title"
-                label="Textbook Title"
+                label="Title"
                 name="title"
                 autoComplete="off"
                 autoFocus
@@ -223,10 +226,9 @@ const AddTextbookModal = ({
                 disabled={isSubmitting}
               />
             </Grid>
-            
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={6}>
               <TextField
-                margin="normal"
+                size="small"
                 required
                 fullWidth
                 id="author"
@@ -240,10 +242,11 @@ const AddTextbookModal = ({
                 disabled={isSubmitting}
               />
             </Grid>
-            
-            <Grid item xs={12} sm={6}>
+
+            {/* Publisher and Publication Year on same line */}
+            <Grid item xs={6}>
               <TextField
-                margin="normal"
+                size="small"
                 required
                 fullWidth
                 id="publisher"
@@ -257,28 +260,12 @@ const AddTextbookModal = ({
                 disabled={isSubmitting}
               />
             </Grid>
-            
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={6}>
               <TextField
-                margin="normal"
-                fullWidth
-                id="edition"
-                label="Edition (Optional)"
-                name="edition"
-                autoComplete="off"
-                value={formData.edition || ''}
-                onChange={handleChange}
-                disabled={isSubmitting}
-                placeholder="e.g., 3rd Edition"
-              />
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <TextField
-                margin="normal"
+                size="small"
                 fullWidth
                 id="publicationYear"
-                label="Publication Year (Optional)"
+                label="Publication Year"
                 name="publicationYear"
                 type="number"
                 autoComplete="off"
@@ -292,121 +279,126 @@ const AddTextbookModal = ({
                 }}
               />
             </Grid>
-            
-            <Grid item xs={12} sm={6}>
+
+            {/* Edition and ISBN on same line */}
+            <Grid item xs={6}>
               <TextField
-                margin="normal"
+                size="small"
+                fullWidth
+                id="edition"
+                label="Edition"
+                name="edition"
+                autoComplete="off"
+                value={formData.edition || ''}
+                onChange={handleChange}
+                disabled={isSubmitting}
+                placeholder="e.g., 3rd Edition"
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                size="small"
                 fullWidth
                 id="isbn"
-                label="ISBN (Optional)"
+                label="ISBN"
                 name="isbn"
                 autoComplete="off"
                 value={formData.isbn || ''}
                 onChange={handleChange}
                 error={!!errors.isbn}
-                helperText={errors.isbn || "ISBN-10 or ISBN-13 format"}
+                helperText={errors.isbn}
                 disabled={isSubmitting}
+                placeholder="e.g., 978-3-16-148410-0"
               />
             </Grid>
-            
-            <Grid item xs={12}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 2 }}>
-                <Typography variant="subtitle1">Upload Files</Typography>
-                
-                {/* Cover Image Upload */}
-                <Box>
-                  <Button
-                    variant="outlined"
-                    component="label"
-                    fullWidth
-                    sx={{ mb: 1 }}
-                    startIcon={<ImageIcon />}
-                  >
-                    Choose Cover Image
-                    <input
-                      type="file"
-                      hidden
-                      accept="image/*"
-                      onChange={(e) => {
-                        const file = e.target.files[0];
-                        if (file) {
-                          const reader = new FileReader();
-                          reader.onloadend = () => {
-                            setFiles(prev => ({
-                              ...prev,
-                              coverImage: file,
-                              coverImagePreview: reader.result
-                            }));
-                          };
-                          reader.readAsDataURL(file);
-                        }
-                      }}
-                    />
-                  </Button>
-                  {files.coverImage && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', mt: 1, gap: 2 }}>
-                      <img 
-                        src={files.coverImagePreview} 
-                        alt="Cover preview" 
-                        style={{ 
-                          maxWidth: '100px', 
-                          maxHeight: '100px', 
-                          objectFit: 'cover', 
-                          borderRadius: '4px'
-                        }}
-                      />
-                      <Box sx={{ flex: 1 }}>
-                        <Typography variant="caption">
-                          {files.coverImage.name}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {files.coverImage.size.toLocaleString()} bytes
-                        </Typography>
-                      </Box>
-                      <Button 
-                        size="small" 
-                        color="error" 
-                        onClick={() => handleRemoveFile('coverImage')}
-                      >
-                        Remove
-                      </Button>
-                    </Box>
-                  )}
-                </Box>
 
-                {/* PDF Upload */}
-                <Box sx={{ mt: 2 }}>
+            {/* File Uploads on same line */}
+            <Grid item xs={6}>
+              <Button
+                variant="outlined"
+                component="label"
+                fullWidth
+                size="small"
+                disabled={isSubmitting}
+                startIcon={<ImageIcon />}
+                sx={{ height: '40px' }}
+              >
+                Upload Cover
+                <input
+                  type="file"
+                  hidden
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        setFiles(prev => ({
+                          ...prev,
+                          coverImage: file,
+                          coverImagePreview: reader.result
+                        }));
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                />
+              </Button>
+              {files.coverImage && (
+                <Box sx={{ mt: 1 }}>
+                  <Typography variant="caption" sx={{ display: 'block' }}>
+                    {files.coverImage.name.length > 15 
+                      ? files.coverImage.name.substring(0, 15) + '...' 
+                      : files.coverImage.name}
+                  </Typography>
                   <Button
-                    variant="outlined"
-                    component="label"
-                    fullWidth
-                    sx={{ mb: 1 }}
-                    startIcon={<PictureAsPdfIcon />}
+                    variant="text"
+                    color="error"
+                    size="small"
+                    onClick={() => handleRemoveFile('coverImage')}
+                    sx={{ p: 0, minWidth: 'auto' }}
                   >
-                    Choose PDF File
-                    <input
-                      type="file"
-                      hidden
-                      accept="application/pdf"
-                      onChange={(e) => handleFileUpload('pdfFile', e.target.files[0])}
-                    />
+                    Remove
                   </Button>
-                  {files.pdfFile && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
-                      <Typography variant="caption" sx={{ flex: 1 }}>
-                        {files.pdfFile.name}
-                      </Typography>
-                      <Button 
-                        size="small" 
-                        color="error" 
-                        onClick={() => handleRemoveFile('pdfFile')}
-                      >
-                        Remove
-                      </Button>
-                    </Box>
-                  )}
                 </Box>
-              </Box>
+              )}
+            </Grid>
+            <Grid item xs={6}>
+              <Button
+                variant="outlined"
+                component="label"
+                fullWidth
+                size="small"
+                disabled={isSubmitting}
+                startIcon={<PictureAsPdfIcon />}
+                sx={{ height: '40px' }}
+              >
+                Upload PDF
+                <input
+                  type="file"
+                  hidden
+                  accept="application/pdf"
+                  onChange={(e) => handleFileUpload('pdfFile', e.target.files[0])}
+                />
+              </Button>
+              {files.pdfFile && (
+                <Box sx={{ mt: 1 }}>
+                  <Typography variant="caption" sx={{ display: 'block' }}>
+                    {files.pdfFile.name.length > 15 
+                      ? files.pdfFile.name.substring(0, 15) + '...' 
+                      : files.pdfFile.name}
+                  </Typography>
+                  <Button
+                    variant="text"
+                    color="error"
+                    size="small"
+                    onClick={() => handleRemoveFile('pdfFile')}
+                    sx={{ p: 0, minWidth: 'auto' }}
+                  >
+                    Remove
+                  </Button>
+                </Box>
+              )}
             </Grid>
           </Grid>
         </Box>

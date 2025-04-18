@@ -236,14 +236,24 @@ const TextbookListPage = () => {
           No textbooks found for this subject. Click "Add Textbook" to add one.
         </Alert>
       ) : (
-        <Grid container spacing={3}>
+        <Grid container spacing={3} sx={{ 
+          mt: 2,
+          '@media (max-width: 750px)': {
+            justifyContent: 'center',
+            '& .MuiGrid-item': {
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }
+          }
+        }}>
           {textbooks.map((textbook) => (
-            <Grid key={textbook.id} item xs={12} sm={6} md={4}>
-              <TextbookCard
-                textbook={textbook}
-                onEdit={() => handleEditTextbook(textbook)}
-                onDelete={() => handleDeleteTextbook(textbook.id)}
-                onView={() => handleViewTextbook(textbook)}
+            <Grid item key={textbook.id} xs={12} sm={6} md={4} lg={3}>
+              <TextbookCard 
+                textbook={textbook} 
+                onEdit={handleEditTextbook}
+                onDelete={handleDeleteTextbook}
+                onView={handleViewTextbook}
               />
             </Grid>
           ))}

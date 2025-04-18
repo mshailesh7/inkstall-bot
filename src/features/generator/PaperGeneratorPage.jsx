@@ -21,9 +21,6 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import RefreshIcon from '@mui/icons-material/Refresh';
-// Remove unused icons
-// import SaveIcon from '@mui/icons-material/Save';
-// import GetAppIcon from '@mui/icons-material/GetApp';
 
 import GeneratorSetupForm from './components/GeneratorSetupForm';
 
@@ -32,15 +29,6 @@ const subjects = [
   { id: 2, name: 'Chemistry', code: '0620' },
   { id: 3, name: 'Biology', code: '0610' },
 ];
-
-// Remove unused questionTypeOptions or use it in the component
-// const questionTypeOptions = [
-//   { id: 1, name: 'Multiple Choice' },
-//   { id: 2, name: 'Structured' },
-//   { id: 3, name: 'Short Answer' },
-//   { id: 4, name: 'Essay' },
-//   { id: 5, name: 'Data Response' },
-// ];
 
 const steps = ['Configure', 'Review Questions', 'Finalize Paper'];
 
@@ -128,30 +116,118 @@ const PaperGeneratorPage = () => {
     }
   };
 
-  // Remove unused functions or implement them
-  // const handleSavePaper = () => {
-  //   console.log('Saving paper');
-  // };
+  // Responsive stepper component that shows only the current step on mobile
+  const ResponsiveStepper = () => {
+    const isMobile = window.matchMedia('(max-width: 450px)').matches;
+    
+    if (isMobile) {
+      // On mobile, show only the current step
+      return (
+        <Box sx={{ 
+          width: '100%', 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center',
+          mb: 3
+        }}>
+          <Box sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <Box sx={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '50%',
+              backgroundColor: '#1976d2',
+              color: 'white',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '18px',
+              fontWeight: 'bold',
+              mb: 1
+            }}>
+              {activeStep + 1}
+            </Box>
+            <Typography variant="body1" sx={{ fontWeight: 500 }}>
+              {steps[activeStep]}
+            </Typography>
+          </Box>
+        </Box>
+      );
+    }
+    
+    // On desktop, show the regular stepper
+    return (
+      <Stepper 
+        activeStep={activeStep} 
+        className="mb-6"
+        orientation="horizontal"
+        sx={{
+          '& .MuiStep-root': {
+            '& .MuiStepIcon-root': {
+              width: '32px',
+              height: '32px',
+              fontSize: '12px',
+            },
+            '& .MuiStepLabel-label': {
+              fontSize: '0.9rem',
+              fontWeight: 500,
+            },
+          },
+          '& .MuiStepConnector-line': {
+            height: '2px',
+          },
+        }}
+      >
+        {steps.map((label) => (
+          <Step key={label}>
+            <StepLabel>{label}</StepLabel>
+          </Step>
+        ))}
+      </Stepper>
+    );
+  };
 
-  // const handleExportPaper = () => {
-  //   console.log('Exporting paper as PDF');
-  // };
+  return (
+    <Box 
+      className="min-h-screen" 
+      style={{ backgroundColor: "#c3e0ff", border: '1px solid blue' }}
+      sx={{
+        px: { xs: 1, sm: 3, md: 6 },
+        py: { xs: 2, sm: 3, md: 6 }
+      }}
+    >
+      <Box 
+        className="bg-white rounded-lg shadow-md"
+        sx={{
+          p: { xs: 2, sm: 3, md: 4 },
+          mx: { xs: 0, sm: 2, md: 3 },
+          width: { xs: '100%', sm: '95%', md: '90%' }
+        }}
+      >
+        {/* <Typography variant="h4" className="text-2xl font-bold mb-8 text-center">
+          Paper Generator
+        </Typography> */}
 
-  const renderStepContent = (step) => {
-    switch (step) {
-      case 0:
-        return (
-          <Paper sx={{ p: 3 }}>
+        {/* Responsive Stepper */}
+        <ResponsiveStepper />
+
+        {/* Responsive Content */}
+        {activeStep === 0 && (
+          <Box className="space-y-4">
             <GeneratorSetupForm
               onSubmit={handleGenerateSubmit}
               isGenerating={loading}
+              handleNext={() => setActiveStep(1)}
             />
-          </Paper>
-        );
-        
-      case 1:
-        return (
-          <Box>
+          </Box>
+        )}
+
+        {activeStep === 1 && (
+          <Box className="space-y-4">
             {questions.map((question, index) => (
               <Card key={question.id} sx={{ mb: 3 }}>
                 <CardHeader
@@ -248,79 +324,75 @@ const PaperGeneratorPage = () => {
               Add Question
             </Button>
           </Box>
-        );
-        
-      case 2:
-        return (
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>Paper Summary</Typography>
-            
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <Typography variant="body1">
-                  <strong>Title:</strong> {paperConfig?.paperTitle || 'Untitled Paper'}
+        )}
+
+        {activeStep === 2 && (
+          <Box className="space-y-4">
+            <Card>
+              <CardHeader title="Final Paper Preview" />
+              <CardContent>
+                <Typography variant="h6" className="font-medium mb-4 text-sm">
+                  {paperConfig?.paperTitle || 'Untitled Paper'}
                 </Typography>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Typography variant="body1">
-                  <strong>Subject:</strong> {
+                <Typography className="mb-2 text-sm">
+                  Subject: {
                     subjects.find(s => s.id.toString() === paperConfig?.subjectId)?.name || 'Not selected'
                   }
                 </Typography>
-              </Grid>
-              
-              <Grid item xs={12} sm={6}>
-                <Typography variant="body1">
-                  <strong>Total Questions:</strong> {questions.length}
+                <Typography className="mb-2 text-sm">
+                  Number of Questions: {questions.length}
                 </Typography>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Typography variant="body1">
-                  <strong>Total Marks:</strong> {questions.reduce((sum, q) => sum + q.marks, 0)}
+                <Typography className="mb-2 text-sm">
+                  Total Marks: {questions.reduce((sum, q) => sum + q.marks, 0)}
                 </Typography>
-              </Grid>
-            </Grid>
-          </Paper>
-        );
-      
-      default:
-        return <div>Unknown step</div>;
-    }
-  };
+              </CardContent>
+            </Card>
+          </Box>
+        )}
 
-  return (
-    <Box>
-      <Stepper activeStep={activeStep} alternativeLabel>
-        {steps.map(label => (
-          <Step key={label}>
-            <StepLabel>{label}</StepLabel>
-          </Step>
-        ))}
-      </Stepper>
-      
-      {generationError && (
-        <Alert severity="error" sx={{ mt: 2 }}>
-          {generationError}
-        </Alert>
-      )}
-      
-      <Box sx={{ mt: 4 }}>
-        {renderStepContent(activeStep)}
-      </Box>
-      
-      <Box sx={{ display: 'flex', flexDirection: 'row', pt: 2 }}>
-        <Button
-          color="inherit"
-          disabled={activeStep === 0 || loading}
-          onClick={handleBack}
-          sx={{ mr: 1 }}
-        >
-          Back
-        </Button>
-        <Box sx={{ flex: '1 1 auto' }} />
-        <Button onClick={handleNext} disabled={loading}>
-          {activeStep === steps.length - 1 ? 'Finish' : 'Next'}
-        </Button>
+        {/* Responsive Navigation Buttons */}
+        <Box className="flex flex-row justify-between items-center mt-6">
+          <Button 
+            variant="contained"
+            onClick={handleBack}
+            disabled={activeStep === 0 || loading}
+            sx={{
+              bgcolor: 'black',
+              color: 'white',
+              '&:hover': {
+                bgcolor: 'gray.800'
+              },
+              padding: '8px 16px',
+              fontSize: '0.9rem',
+              '@media (max-width: 640px)': {
+                padding: '6px 12px',
+                fontSize: '0.8rem'
+              }
+            }}
+          >
+            Back
+          </Button>
+          <Box sx={{ flex: '1 1 auto' }} />
+          <Button 
+            variant="contained"  
+            onClick={handleNext} 
+            sx={{
+              bgcolor: 'black',
+              color: 'white',
+              '&:hover': {
+                bgcolor: 'gray.800'
+              },
+              padding: '8px 16px',
+              fontSize: '0.9rem',
+              '@media (max-width: 640px)': {
+                padding: '6px 12px',
+                fontSize: '0.8rem'
+              }
+            }}
+          >
+            {activeStep === steps.length - 1 ? 'Finish' : 'Next'}
+          </Button>
+        </Box>
       </Box>
     </Box>
   );

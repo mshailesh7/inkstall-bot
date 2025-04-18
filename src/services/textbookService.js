@@ -153,9 +153,16 @@ export const addTextbook = async (formData) => {
     if (formData.has('coverImage')) {
         const file = formData.get('coverImage');
         console.log('Processing cover image:', file.name);
-        // In a real application, you would upload this file to a storage service
-        // For now, just store the filename as the URL
-        newTextbook.coverImageUrl = `mock-upload://${file.name}`;
+        
+        // Use the data URL if available (this will work in the browser)
+        if (formData.has('coverImageDataUrl')) {
+            newTextbook.coverImageUrl = formData.get('coverImageDataUrl');
+            console.log('Using image data URL for cover image');
+        } else {
+            // Fallback to mock URL (will not work in browser)
+            newTextbook.coverImageUrl = `mock-upload://${file.name}`;
+            console.log('Warning: Using mock URL for cover image, this will not display in browser');
+        }
     }
 
     if (formData.has('pdfFile')) {

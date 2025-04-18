@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LoginIcon from '@mui/icons-material/Login';
+import MailOutlineIcon from '@mui/icons-material/MailOutline';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import logo from '../assets/inkstall.svg';
 import './Login.css';
 
 const Login = () => {
@@ -39,36 +42,40 @@ const Login = () => {
   return (
     <div className="login-container">
       <div className="login-box">
-        <div className="logo">
-          <img src="/logo.png" alt="Inkstall" />
-          <h2>Education Dashboard</h2>
+        <div className="logo" style={{ textAlign: 'center' }}>
+          <img src={logo} alt="Logo" />
+          <div className="subtitle">Education Dashboard</div>
         </div>
-        
         {error && <div className="error-message">{error}</div>}
-        
         <form onSubmit={handleSubmit}>
-          <div className="input-group">
+          <div className="input-group input-with-icon">
+            <span className="input-icon">
+              <MailOutlineIcon style={{ fontSize: 20, opacity: 0.5 }} />
+            </span>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"
               required
+              autoComplete="username"
             />
           </div>
-          
-          <div className="input-group">
+          <div className="input-group input-with-icon">
+            <span className="input-icon">
+              <LockOutlinedIcon style={{ fontSize: 20, opacity: 0.5 }} />
+            </span>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter password"
+              placeholder="Enter your password"
               required
+              autoComplete="current-password"
             />
           </div>
-          
           <button type="submit" className="sign-in-button" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-            <LoginIcon style={{ fontSize: 24 }} />
+            <LoginIcon style={{ fontSize: 22, marginRight: 8 }} />
             Sign In
           </button>
         </form>

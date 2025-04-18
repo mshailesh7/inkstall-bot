@@ -80,17 +80,17 @@ const DashboardPage = () => {
   // Timer digit component for consistent styling
   const TimerDigit = ({ digit }) => (
     <Box sx={{ 
-      width: 38,
-      height: 48,
+      width: { xs: 30, sm: 38 },
+      height: { xs: 36, sm: 48 },
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       color: '#1976d2',
-      fontSize: '1.08em',
+      fontSize: { xs: '0.9em', sm: '1.08em' },
       fontWeight: 500,
       border: '1px solid #1976d2',
       borderRadius: 1,
-      mx: 0.5
+      mx: { xs: 0.25, sm: 0.5 }
     }}>
       {digit}
     </Box>
@@ -102,13 +102,13 @@ const DashboardPage = () => {
       display: 'flex', 
       flexDirection: 'column', 
       alignItems: 'center',
-      mx: 1
+      mx: { xs: 0.5, sm: 1 }
     }}>
       <Box sx={{ display: 'flex', mb: 0.5 }}>
         <TimerDigit digit={value.first} />
         <TimerDigit digit={value.second} />
       </Box>
-      <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.97em' }}>
+      <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.85em', sm: '0.97em' } }}>
         {label}
       </Typography>
     </Box>
@@ -118,7 +118,6 @@ const DashboardPage = () => {
   const ActionButton = ({ icon, text, onClick }) => (
     <Button
       variant="contained"
-      startIcon={icon}
       onClick={onClick}
       sx={{
         justifyContent: 'space-between',
@@ -214,9 +213,10 @@ const DashboardPage = () => {
             />
           </Box>
           
-          <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 48%' }, display: { xs: 'none', md: 'block' } }}>
+          <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 48%' }, display: { xs: 'block', md: 'block' } }}>
             <ActionButton 
               icon={<DescriptionIcon />} 
+              
               text="Correct Paper" 
               onClick={() => navigate('/corrections')} 
             />
@@ -224,8 +224,8 @@ const DashboardPage = () => {
         </Box>
       </Box>
 
-      {/* Upcoming Exam Schedule */}
-      <Box sx={{ mb: 4 }}>
+       {/* Upcoming Exam Schedule */}
+       <Box sx={{ mb: 4 }}>
         <Typography variant="h5" component="h2" sx={{ mb: 2, fontWeight: 600, color: 'text.primary' }}>
           Upcoming Exam Schedule
         </Typography>
@@ -251,7 +251,7 @@ const DashboardPage = () => {
               borderRadius: '14px',
               border: '1px solid #e6f0fa',
               boxShadow: '0 1px 4px #e6f0fa',
-              padding: '18px 20px',
+              padding: { xs: '12px 10px', sm: '18px 20px' },
               mb: 3,
             }}>
               <Typography variant="h5" component="div" sx={{ fontWeight: 500, fontSize: '1.08em', mb: 1 }}>
@@ -276,57 +276,74 @@ const DashboardPage = () => {
                 borderRadius: '14px',
                 border: '1px solid #e6f0fa',
                 boxShadow: '0 1px 4px #e6f0fa',
-                padding: '18px 20px',
+                padding: { xs: '12px 10px', sm: '18px 20px' },
                 mb: 3,
                 display: 'flex',
                 justifyContent: 'center',
+                '@media (max-width: 570px)': {
+                  display: 'block',
+                  padding: '12px 16px',
+                }
               }}>
-                <TimerUnit value={timeValues.days} label="Days" />
-                <TimerUnit value={timeValues.hours} label="Hours" />
-                <TimerUnit value={timeValues.minutes} label="Minutes" />
-                <TimerUnit value={timeValues.seconds} label="Seconds" />
+                <Box sx={{
+                  '@media (min-width: 571px)': {
+                    display: 'flex',
+                    justifyContent: 'center',
+                  },
+                  '@media (max-width: 570px)': {
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: { xs: 1, sm: 2 },
+                    textAlign: 'center',
+                  }
+                }}>
+                  {/* Days */}
+                  <TimerUnit value={timeValues.days} label="Days" />
+                  {/* Hours */}
+                  <TimerUnit value={timeValues.hours} label="Hours" />
+                  {/* Minutes */}
+                  <TimerUnit value={timeValues.minutes} label="Minutes" />
+                  {/* Seconds */}
+                  <TimerUnit value={timeValues.seconds} label="Seconds" />
+                </Box>
               </Box>
             </Box>
             
             <Button
-              variant="contained"
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                width: 'fit-content',
-                minWidth: 240,
-                p: 1.5,
-                bgcolor: 'background.paper',
-                color: 'text.primary',
-                border: 'none',
-                fontWeight: 500,
-                fontSize: '1.08em',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-                borderRadius: 2,
-                mt: 6
-              }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <AddIcon sx={{ fontSize: 22, color: 'text.primary', mr: 1 }} />
-                <span style={{ fontSize: '1.08em', fontWeight: 500, color: '#222', fontFamily: 'inherit', textTransform: 'none', lineHeight: 1.2 }}>View Exam Details</span>
-              </Box>
-              <Box
-                component="span"
-                sx={{
-                  bgcolor: '#c3e0ff',
-                  p: 0.5,
-                  borderRadius: 1,
-                  display: 'flex',
-                  color: '#1976d2',
-                  ml: 2,
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-              >
-                <ChevronRightIcon style={{ fontSize: '1.4em', color: '#3498ff' }} />
-              </Box>
-            </Button>
+  variant="contained"
+  startIcon={<AddIcon />}
+  sx={{
+    justifyContent: 'space-between',
+    p: 2,
+    bgcolor: 'background.paper',
+    color: 'text.primary',
+    border: 'none',
+    fontWeight: 500,
+    fontSize: '1.08em',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
+    mt: 2,
+    borderRadius: 1,
+    textTransform: 'none',
+  }}
+>
+  <span style={{ lineHeight: 1.2 }}>View Exam Details</span>
+  <Box
+    component="span"
+    sx={{
+      bgcolor: '#c3e0ff',
+      p: 0.5,
+      borderRadius: 1,
+      display: 'flex',
+      color: '#1976d2',
+      alignItems: 'center',
+      justifyContent: 'center',
+      ml: 1.5
+    }}
+  >
+    <ChevronRightIcon style={{ fontSize: '1.4em', color: '#3498ff' }} />
+  </Box>
+</Button>
+
           </Card>
           
           {/* Exam Calendar Card */}
@@ -336,7 +353,7 @@ const DashboardPage = () => {
             borderRadius: 2,
             backgroundColor: '#e3f2fd', 
             boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
-            display: { xs: 'none', md: 'block' }
+            display: { xs: 'block', md: 'block' }
           }}>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
               <CalendarTodayIcon sx={{ mr: 1, color: '#1976d2' }} />
@@ -389,36 +406,84 @@ const DashboardPage = () => {
               </Box>
             ))}
             
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              sx={{ 
-                justifyContent: 'space-between', 
-                p: 2, 
-                bgcolor: 'background.paper',
-                color: 'text.primary',
-                border: 'none',
-                fontWeight: 500,
-                fontSize: '1.08em',
-                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
-                mt: 2,
-                borderRadius: 1,
-              }}
-            >
-              <span>Schedule New Exam</span>
-              <Box 
-                component="span" 
-                sx={{ 
-                  bgcolor: '#c3e0ff', 
-                  p: 0.5, 
-                  borderRadius: 1, 
-                  display: 'flex', 
-                  color: '#1976d2'
-                }}
-              >
-                <ChevronRightIcon style={{ fontSize: '1.4em', color: '#3498ff' }} />
-              </Box>
-            </Button>
+            <Box sx={{ width: { xs: '100%', md: 'auto' } }}>
+  {/* Mobile View */}
+  <Button
+    variant="outlined"
+    sx={{
+      display: { xs: 'flex', md: 'none' },
+      alignItems: 'center',
+      justifyContent: 'flex-start',
+      background: '#fff',
+      borderRadius: '12px',
+      boxShadow: '0 2px 10px #e6f0fa',
+      border: 'none',
+      px: 2.5,
+      py: 1.2,
+      minWidth: 0,
+      mt: 2,
+      gap: 1.5,
+      textTransform: 'none',
+      width: '100%',
+      '&:hover': { background: '#f5faff', boxShadow: '0 2px 12px #e6f0fa' }
+    }}
+  >
+    <AddIcon sx={{ fontSize: 22, color: '#1976d2', mr: 1 }} />
+    <span style={{ fontSize: '1.08em', fontWeight: 500, color: '#222', fontFamily: 'inherit', lineHeight: 1.2 }}>
+      Schedule New Exam
+    </span>
+    <Box
+      component="span"
+      sx={{
+        bgcolor: '#c3e0ff',
+        p: 0.5,
+        borderRadius: 1,
+        display: 'flex',
+        color: '#1976d2',
+        ml: 1.5,
+        alignItems: 'center',
+        justifyContent: 'center',
+        minWidth: 32,
+        minHeight: 32
+      }}
+    >
+      <ChevronRightIcon style={{ fontSize: '1.4em', color: '#3498ff' }} />
+    </Box>
+  </Button>
+  {/* Desktop View */}
+  <Button
+    variant="contained"
+    startIcon={<AddIcon />}
+    sx={{
+      display: { xs: 'none', md: 'flex' },
+      justifyContent: 'space-between',
+      p: 2,
+      bgcolor: 'background.paper',
+      color: 'text.primary',
+      border: 'none',
+      fontWeight: 500,
+      fontSize: '1.08em',
+      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
+      mt: 2,
+      borderRadius: 1,
+    }}
+  >
+    <span>Schedule New Exam</span>
+    <Box
+      component="span"
+      sx={{
+        bgcolor: '#c3e0ff',
+        p: 0.5,
+        borderRadius: 1,
+        display: 'flex',
+        color: '#1976d2',
+        ml: 1.5
+      }}
+    >
+      <ChevronRightIcon style={{ fontSize: '1.4em', color: '#3498ff' }} />
+    </Box>
+  </Button>
+</Box>
           </Card>
         </Box>
       </Box>

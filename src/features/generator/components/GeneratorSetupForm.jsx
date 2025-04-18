@@ -24,7 +24,7 @@ const AVAILABLE_QUESTION_TYPES = ['MCQ', 'Structured', 'Short Answer', 'Essay', 
 const AVAILABLE_DIFFICULTY_LEVELS = ['Easy', 'Medium', 'Hard', 'Mixed'];
 const AVAILABLE_ASSESSMENT_OBJECTIVES = ['AO1', 'AO2', 'AO3'];
 
-const GeneratorSetupForm = ({ onSubmit, isGenerating }) => {
+const GeneratorSetupForm = ({ onSubmit, isGenerating, handleNext }) => {
     // --- State for fetched subjects ---
     const [subjects, setSubjects] = useState([]);
     const [subjectsLoading, setSubjectsLoading] = useState(true);
@@ -93,15 +93,49 @@ const GeneratorSetupForm = ({ onSubmit, isGenerating }) => {
         onSubmit(config);
     };
 
-    return (
-        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
-            <Typography variant="h6" gutterBottom>
+    const formContent = (
+        <Box 
+            component="form" 
+            onSubmit={handleSubmit}
+            className="bg-white rounded-lg"
+            sx={{
+                width: '100%',
+                '@media (max-width: 450px)': {
+                    '& .MuiFormLabel-root': {
+                        width: '100%',
+                        marginBottom: '4px',
+                    },
+                    '& .MuiInputLabel-shrink': {
+                        transform: 'translate(0, -1.5px) scale(0.75)',
+                        transformOrigin: 'top left',
+                    },
+                    '& .MuiFormControl-root .MuiInputLabel-root:not(.MuiInputLabel-shrink)': {
+                        transform: 'translate(0, 16px) scale(1)',
+                    },
+                    '& .MuiOutlinedInput-notchedOutline legend': {
+                        width: '100%',
+                    }
+                }
+            }}
+        >
+            {/* <Typography variant="h6" className="text-lg font-medium mb-4 text-center">
                 Configure Paper Generation
-            </Typography>
-            <Grid container spacing={3}>
-                {/* Row 1: Subject and Title */}
-                <Grid item xs={12} sm={6}>
-                    <FormControl fullWidth required error={!!subjectsError || (!subjectsLoading && subjects.length === 0)}>
+            </Typography> */}
+            <div className="space-y-6">
+                {/* Subject and Title - Same Line */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormControl 
+                        fullWidth 
+                        required 
+                        error={!!subjectsError || (!subjectsLoading && subjects.length === 0)}
+                        className="mb-2"
+                        sx={{
+                            '@media (max-width: 450px)': {
+                                width: '100% !important',
+                                maxWidth: '100% !important',
+                            }
+                        }}
+                    >
                         <InputLabel id="subject-select-label">Subject</InputLabel>
                         <Select
                             labelId="subject-select-label"
@@ -110,6 +144,12 @@ const GeneratorSetupForm = ({ onSubmit, isGenerating }) => {
                             label="Subject"
                             onChange={(e) => setSubjectId(e.target.value)}
                             disabled={subjectsLoading || isGenerating}
+                            sx={{
+                                '@media (max-width: 450px)': {
+                                    width: '100% !important',
+                                    maxWidth: '100% !important',
+                                }
+                            }}
                         >
                             {subjectsLoading && <MenuItem value=""><CircularProgress size={20} sx={{ mr: 1}} /> Loading...</MenuItem>}
                             {subjectsError && <MenuItem value="" disabled>{subjectsError}</MenuItem>}
@@ -123,9 +163,7 @@ const GeneratorSetupForm = ({ onSubmit, isGenerating }) => {
                          {subjectsError && <FormHelperText error>{subjectsError}</FormHelperText>}
                          {!subjectsLoading && subjects.length === 0 && !subjectsError && <FormHelperText>Please add subjects in the 'Subjects & Books' section.</FormHelperText>}
                     </FormControl>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                     <TextField
+                    <TextField
                         fullWidth
                         id="paper-title"
                         label="Paper Title (Optional)"
@@ -133,58 +171,90 @@ const GeneratorSetupForm = ({ onSubmit, isGenerating }) => {
                         onChange={(e) => setPaperTitle(e.target.value)}
                         disabled={isGenerating}
                         helperText="Defaults if left blank"
+                        className="mb-2"
+                        sx={{
+                            width: '100% !important',
+                            maxWidth: '100% !important',
+                            '& .MuiInputBase-root': {
+                                width: '100% !important',
+                                maxWidth: '100% !important',
+                            },
+                            '@media (max-width: 450px)': {
+                                width: '100% !important',
+                                maxWidth: '100% !important',
+                                '& .MuiInputBase-root': {
+                                    width: '100% !important',
+                                    maxWidth: '100% !important',
+                                }
+                            }
+                        }}
                     />
-                </Grid>
+                </div>
 
-                {/* Row 2: Topics and Num Questions */}
-                 <Grid item xs={12} sm={8}>
-                    <TextField
-                        fullWidth
-                        id="topics"
-                        label="Topics/Keywords to Cover"
-                        value={topics}
-                        onChange={(e) => setTopics(e.target.value)}
-                        disabled={isGenerating}
-                        helperText="Enter comma-separated topics or keywords (e.g., Kinematics, Forces, Newton's Laws)"
-                        required
-                    />
-                </Grid>
-                <Grid item xs={12} sm={4}>
-                    <TextField
-                        fullWidth
-                        required
-                        id="num-questions"
-                        label="Number of Questions"
-                        type="number"
-                        value={numQuestions}
-                        onChange={(e) => setNumQuestions(Math.max(1, parseInt(e.target.value) || 1))}
-                        disabled={isGenerating}
-                        InputProps={{ inputProps: { min: 1, step: 1 } }}
-                    />
-                </Grid>
+                {/* Topics and Number of Questions */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div className="md:col-span-3">
+                        <TextField
+                            fullWidth
+                            id="topics"
+                            label="Topic/Keywords to Cover*"
+                            value={topics}
+                            onChange={(e) => setTopics(e.target.value)}
+                            disabled={isGenerating}
+                            helperText="Enter comma-separated topics or keywords (e.g., Kinematics, Forces, Newton's Laws)"
+                            required
+                            sx={{
+                                '@media (max-width: 450px)': {
+                                    width: '100%'
+                                }
+                            }}
+                            className="mb-0"
+                        />
+                    </div>
+                    <div className="md:col-span-1">
+                        <TextField
+                            fullWidth
+                            required
+                            id="num-questions"
+                            label="Number of Questions*"
+                            type="number"
+                            value={numQuestions}
+                            onChange={(e) => setNumQuestions(Math.max(1, parseInt(e.target.value) || 1))}
+                            disabled={isGenerating}
+                            InputProps={{ inputProps: { min: 1, step: 1 } }}
+                            sx={{
+                                '@media (max-width: 450px)': {
+                                    width: '100%'
+                                }
+                            }}
+                            className="mb-0"
+                        />
+                    </div>
+                </div>
 
-                 {/* Row 3: Question Types and Difficulty */}
-                <Grid item xs={12} sm={6}>
+                {/* Question Types and Difficulty */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <FormControl fullWidth required>
-                        <InputLabel id="question-types-label">Question Types</InputLabel>
+                        <InputLabel id="question-types-label">Question Types*</InputLabel>
                         <Select
                             labelId="question-types-label"
                             id="question-types-select"
                             multiple
                             value={selectedQuestionTypes}
                             onChange={handleQuestionTypeChange}
-                            input={<OutlinedInput label="Question Types" />}
+                            input={<OutlinedInput label="Question Types*" />}
                             renderValue={(selected) => (
                                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                                 {selected.map((value) => (
-                                    <Chip key={value} label={value} size="small" />
+                                    <Chip key={value} label={value} size="small" className="bg-blue-100 text-blue-700" />
                                 ))}
                                 </Box>
                             )}
                             MenuProps={{
                                 PaperProps: { style: { maxHeight: 250 } },
                             }}
-                             disabled={isGenerating}
+                            disabled={isGenerating}
+                            className="mb-0"
                         >
                             {AVAILABLE_QUESTION_TYPES.map((type) => (
                                 <MenuItem key={type} value={type}>
@@ -195,27 +265,27 @@ const GeneratorSetupForm = ({ onSubmit, isGenerating }) => {
                         </Select>
                         {selectedQuestionTypes.length === 0 && <FormHelperText error>Please select at least one question type.</FormHelperText>}
                     </FormControl>
-                </Grid>
-                 <Grid item xs={12} sm={6}>
+
                     <FormControl fullWidth required>
-                        <InputLabel id="difficulty-label">Difficulty Level</InputLabel>
+                        <InputLabel id="difficulty-label">Difficulty Level*</InputLabel>
                         <Select
                             labelId="difficulty-label"
                             id="difficulty-select"
                             value={difficulty}
-                            label="Difficulty Level"
+                            label="Difficulty Level*"
                             onChange={(e) => setDifficulty(e.target.value)}
                             disabled={isGenerating}
+                            className="mb-0"
                         >
                             {AVAILABLE_DIFFICULTY_LEVELS.map((level) => (
                                 <MenuItem key={level} value={level}>{level}</MenuItem>
                             ))}
                         </Select>
                     </FormControl>
-                </Grid>
+                </div>
 
-                {/* Row 4: Assessment Objectives and Command Words */}
-                <Grid item xs={12} sm={6}>
+                {/* Assessment Objectives and Command Words */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <FormControl fullWidth>
                         <InputLabel id="assessment-objectives-label">Assessment Objectives (Optional)</InputLabel>
                         <Select
@@ -233,6 +303,7 @@ const GeneratorSetupForm = ({ onSubmit, isGenerating }) => {
                                 </Box>
                             )}
                             disabled={isGenerating}
+                            className="mb-0"
                         >
                             {AVAILABLE_ASSESSMENT_OBJECTIVES.map((ao) => (
                                 <MenuItem key={ao} value={ao}>
@@ -242,8 +313,7 @@ const GeneratorSetupForm = ({ onSubmit, isGenerating }) => {
                             ))}
                         </Select>
                     </FormControl>
-                </Grid>
-                <Grid item xs={12} sm={6}>
+
                     <TextField
                         fullWidth
                         id="command-words"
@@ -251,11 +321,18 @@ const GeneratorSetupForm = ({ onSubmit, isGenerating }) => {
                         value={commandWords}
                         onChange={(e) => setCommandWords(e.target.value)}
                         disabled={isGenerating}
+                        helperText="Enter comma-separated command words (e.g., Explain, Compare, Analyze)"
+                        sx={{
+                            '@media (max-width: 450px)': {
+                                width: '100%'
+                            }
+                        }}
+                        className="mb-0"
                     />
-                </Grid>
+                </div>
 
-                {/* Row 5: Total Marks and Time Limit */}
-                <Grid item xs={12} sm={6}>
+                {/* Total Marks and Time Limit */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <TextField
                         fullWidth
                         id="total-marks"
@@ -265,9 +342,14 @@ const GeneratorSetupForm = ({ onSubmit, isGenerating }) => {
                         onChange={(e) => setTotalMarks(e.target.value)}
                         disabled={isGenerating}
                         InputProps={{ inputProps: { min: 1 } }}
+                        sx={{
+                            '@media (max-width: 450px)': {
+                                width: '100%'
+                            }
+                        }}
+                        className="mb-0"
                     />
-                </Grid>
-                <Grid item xs={12} sm={6}>
+
                     <TextField
                         fullWidth
                         id="time-limit"
@@ -277,19 +359,42 @@ const GeneratorSetupForm = ({ onSubmit, isGenerating }) => {
                         onChange={(e) => setTimeLimit(e.target.value)}
                         disabled={isGenerating}
                         InputProps={{ inputProps: { min: 1 } }}
+                        sx={{
+                            '@media (max-width: 450px)': {
+                                width: '100%'
+                            }
+                        }}
+                        className="mb-0"
                     />
-                </Grid>
+                </div>
 
-                <Grid item xs={12}>
+                {/* Generate Paper Button in bottom right */}
+                <div className="flex justify-end mt-6">
                     <Button 
                         type="submit" 
                         variant="contained" 
                         disabled={isGenerating}
+                        className="bg-blue-600 hover:bg-blue-700 px-6 py-2"
                     >
                         {isGenerating ? <CircularProgress size={24} /> : 'Generate Paper'}
                     </Button>
-                </Grid>
-            </Grid>
+                </div>
+            </div>
+        </Box>
+    );
+
+    return (
+        <Box className="min-h-screen bg-white py-8 px-4">
+            {formContent}
+            {/* <div className="mt-6 flex justify-end">
+                <Button 
+                    variant="contained" 
+                    className="bg-black text-white px-6 py-2 hover:bg-gray-800"
+                    onClick={handleNext}
+                >
+                    Next
+                </Button>
+            </div> */}
         </Box>
     );
 };

@@ -39,14 +39,14 @@ const RecentActivity = () => {
     <div style={{
       // background: "linear-gradient(135deg, #d7e8fa 0%, #b3d0f7 100%)",
       minHeight: "100vh",
-      padding: "24px"
+      // padding: "24px"
     }}>
       {/* <h3 style={{ marginBottom: "16px", color: "#222" }}>Recent Activity</h3> */}
       <div style={{
         background: "rgba(255,255,255,0.6)",
         borderRadius: "18px",
         boxShadow: "0 2px 16px #b3d0f7",
-        padding: "24px",
+        padding: "21px",
         maxWidth: "900px",
         margin: "0 auto"
       }}>

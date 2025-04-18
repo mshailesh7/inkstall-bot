@@ -22,6 +22,8 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import GetAppIcon from '@mui/icons-material/GetApp';
 import SaveIcon from '@mui/icons-material/Save';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useTheme } from '@mui/material/styles';
 
 const steps = ['Select Paper & Upload Answers', 'Initiate Correction', 'Review Results', 'Finalize'];
 
@@ -76,6 +78,9 @@ const mockCorrectionResults = [
 ];
 
 const CorrectionsPage = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
   const [activeStep, setActiveStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [processingProgress, setProcessingProgress] = useState(0);
@@ -451,21 +456,39 @@ const CorrectionsPage = () => {
   };
 
   return (
-    <Box>
+    <Box sx={{ px: { xs: 1, sm: 2, md: 3 }, overflowX: 'hidden', maxWidth: '100vw', width: '100%', pb: '60px' }}>
       <Typography variant="h4" gutterBottom>
         Answer Correction
       </Typography>
-      
-      <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-        {steps.map((label) => (
-          <Step key={label}>
-            <StepLabel>{label}</StepLabel>
-          </Step>
-        ))}
-      </Stepper>
-      
+      <Box sx={{ overflowX: (isMobile || isTablet) ? 'auto' : 'visible', width: '100%', mb: { xs: 2, sm: 3 } }}>
+        <Stepper
+          activeStep={activeStep}
+          orientation={isMobile ? 'vertical' : 'horizontal'}
+          sx={{
+            minWidth: 0,
+            '& .MuiStepLabel-label': {
+              fontSize: isMobile ? '0.98rem' : isTablet ? '0.98rem' : '1.1rem',
+              whiteSpace: 'normal',
+              textAlign: isMobile ? 'left' : 'center',
+              lineHeight: 1.3,
+              maxWidth: { xs: '220px', sm: '150px', md: '180px' },
+            },
+            '& .MuiStep-root': {
+              minWidth: isTablet ? 120 : 0,
+              flex: isTablet ? '1 1 0' : 'unset',
+              px: isTablet ? 1.5 : 2,
+              mb: isMobile ? 2 : 0,
+            },
+          }}
+        >
+          {steps.map((label) => (
+            <Step key={label}>
+              <StepLabel>{label}</StepLabel>
+            </Step>
+          ))}
+        </Stepper>
+      </Box>
       {renderStepContent(activeStep)}
-      
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
         {activeStep > 0 && activeStep < 3 && (
           <Button

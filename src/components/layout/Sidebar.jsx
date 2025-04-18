@@ -11,6 +11,7 @@ import AssignmentIcon from "@mui/icons-material/Assignment";
 import LibraryBooksIcon from "@mui/icons-material/LibraryBooks";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import SettingsIcon from "@mui/icons-material/Settings";
+import logo from '../../assets/inkstall.svg';
 
 // Fixed width for the sidebar
 const SIDEBAR_WIDTH = 280;
@@ -87,14 +88,18 @@ const Sidebar = ({ open, onToggle }) => {
         variant="h1"
         component="div"
         sx={{
-          fontSize: "2.5rem",
+          fontSize: "1.5rem",
           fontWeight: "bold",
           color: "#8bc4ff",
           mb: 4,
           mt: 2,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          
         }}
       >
-        LOGO
+        <img src={logo} alt="Logo"style={{ width: '100px', height: 'auto' }} />
       </Typography>
 
       {/* Menu Items */}

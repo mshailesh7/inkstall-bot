@@ -1,6 +1,6 @@
 // AppLayout.jsx - Updated version
 import React, { useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import CssBaseline from '@mui/material/CssBaseline';
 import IconButton from '@mui/material/IconButton';
@@ -16,6 +16,7 @@ import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 
 const AppLayout = () => {
   const theme = useTheme();
+  const navigate = useNavigate();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   
   // State for the sidebar open/close status
@@ -33,116 +34,109 @@ const AppLayout = () => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box 
-        sx={{ 
-          display: 'flex', 
-          bgcolor: '#c3e0ff', 
-          minHeight: '100vh',
-          position: 'relative',
-          // Add a CSS variable to be used throughout the component
-          '--sidebar-width': sidebarWidth
-        }}
-      >
-        {/* Sidebar */}
+      
+      {/* Root container */}
+      <Box sx={{ height: '100vh', overflow: 'hidden' }}>
+        {/* Sidebar - positioned outside the main content flow */}
         <Sidebar open={sidebarOpen} onToggle={toggleSidebar} />
         
-        {/* Header bar with hamburger, notification and profile icons */}
-        <Box
-          sx={{
-            position: 'fixed',
-            top: 0,
-            left: { 
-              xs: 0, 
-              md: sidebarOpen ? `var(--sidebar-width)`: 0
-            },
-            right: 0,
-            zIndex: 1200,
-            display: 'flex',
-            justifyContent: 'space-between',
-            transition: 'left 0.3s ease',
-            padding: '8px 16px',
-            backgroundColor: '#c3e0ff',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+        {/* Main content container - includes header and scrollable content */}
+        <Box 
+          sx={{ 
+            height: '100vh',
+            marginLeft: { xs: 0, md: sidebarOpen ? 'var(--sidebar-width)' : 0 },
+            transition: theme.transitions.create(['margin-left']),
+            '--sidebar-width': sidebarWidth,
           }}
         >
-          {/* Hamburger menu button */}
-          <IconButton
-            aria-label="toggle sidebar"
-            onClick={toggleSidebar}
+          {/* Fixed Header bar with hamburger and notification icons */}
+          <Box
             sx={{
-              bgcolor: 'white',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-              width: 40,
-              height: 40,
+              position: 'fixed',
+              top: 0,
+              left: { xs: 0, md: sidebarOpen ? 'var(--sidebar-width)' : 0 },
+              right: 0,
+              zIndex: 1200,
               display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              justifyContent: 'space-between',
+              padding: '8px 16px',
+              backgroundColor: '#c3e0ff',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+              transition: theme.transitions.create(['left']),
+              height: '56px',
             }}
           >
-            <MenuIcon />
-          </IconButton>
-          
-          {/* User actions */}
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <IconButton 
+            {/* Hamburger menu button */}
+            <IconButton
+              aria-label="toggle sidebar"
+              onClick={toggleSidebar}
               sx={{
                 bgcolor: 'white',
                 boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
                 width: 40,
                 height: 40,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
               }}
             >
-              <Badge badgeContent={1} color="error">
-                <NotificationsIcon />
-              </Badge>
+              <MenuIcon />
             </IconButton>
-            <IconButton 
-              sx={{
-                bgcolor: 'white',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                width: 40,
-                height: 40,
-              }}
-            >
-              <AccountCircleIcon />
-            </IconButton>
-          </Box>
-        </Box>
-        
-        {/* Main content area - Shift when sidebar is open */}
-        <Box 
-          component="main" 
-          sx={{ 
-            flexGrow: 1,
-            p: 0,
-            // Set margin-left to sidebar width when open
-            marginLeft: { 
-              xs: 0, 
-              md: sidebarOpen ? 'var(--sidebar-width)' : 0 
-            },
-            // Adjust width to take sidebar into account
-            width: { 
-              xs: '100%', 
-              md: sidebarOpen ? `calc(100% - var(--sidebar-width))` : '100%' 
-            },
-            // Smooth transition
-            transition: 'margin-left 0.3s ease, width 0.3s ease',
-          }}
-        >
-          {/* Content with proper spacing for the hamburger button */}
-          <Box sx={{ 
-            pt: 5, // Reduced space for fixed header bar
-            px: 2
-          }}>
-            <Box sx={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'space-between',
-              pb: 0
-            }}>
-              <Topbar />
+            
+            {/* User actions */}
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <IconButton 
+                sx={{
+                  bgcolor: 'white',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                  width: 40,
+                  height: 40,
+                }}
+              >
+                <Badge color="error">
+                  <NotificationsIcon />
+                </Badge>
+              </IconButton>
+              <IconButton 
+                onClick={() => navigate('/settings')}
+                sx={{
+                  bgcolor: 'white',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                  width: 40,
+                  height: 40,
+                }}
+              >
+                <AccountCircleIcon />
+              </IconButton>
             </Box>
-            <Outlet />
+          </Box>
+          
+          {/* Scrollable Content Area */}
+          <Box 
+            sx={{ 
+              height: '100vh',
+              overflow: 'auto',
+              bgcolor: '#c3e0ff',
+              marginTop: '56px', // Add margin to account for fixed header
+              '&::-webkit-scrollbar': {
+                width: 8,
+              },
+              '&::-webkit-scrollbar-track': {
+                background: '#e6f2ff',
+                borderRadius: 4,
+              },
+              '&::-webkit-scrollbar-thumb': {
+                background: '#a6c8ff',
+                borderRadius: 4,
+              },
+              '&::-webkit-scrollbar-thumb:hover': {
+                background: '#84b3ff',
+              }
+            }}
+          >
+            <Box sx={{ p: 3 }}>
+              <Outlet />
+            </Box>
           </Box>
         </Box>
       </Box>
