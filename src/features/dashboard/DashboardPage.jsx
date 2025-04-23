@@ -90,7 +90,7 @@ const DashboardPage = () => {
       fontWeight: 500,
       border: '1px solid #1976d2',
       borderRadius: 1,
-      mx: { xs: 0.25, sm: 0.5 }
+      mx: 0
     }}>
       {digit}
     </Box>
@@ -102,9 +102,9 @@ const DashboardPage = () => {
       display: 'flex', 
       flexDirection: 'column', 
       alignItems: 'center',
-      mx: { xs: 0.5, sm: 1 }
+      gap: 0
     }}>
-      <Box sx={{ display: 'flex', mb: 0.5 }}>
+      <Box sx={{ display: 'flex', gap: { xs: 0.4, sm: 0.4 }, mb: 0.5 }}>
         <TimerDigit digit={value.first} />
         <TimerDigit digit={value.second} />
       </Box>
@@ -289,6 +289,7 @@ const DashboardPage = () => {
                   '@media (min-width: 571px)': {
                     display: 'flex',
                     justifyContent: 'center',
+                    gap: { xs: 1, sm: 2 },
                   },
                   '@media (max-width: 570px)': {
                     display: 'grid',
@@ -494,3 +495,4 @@ const DashboardPage = () => {
 };
 
 export default DashboardPage;
+ 

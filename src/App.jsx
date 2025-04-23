@@ -11,11 +11,25 @@ import SettingsPage from './features/settings/SettingsPage';
 import PrivateRoute from './components/PrivateRoute';
 
 import TextbookListPage from './features/textbooks/TextbookListPage';
+import ForgetPasswordPage from './components/Forget';
+import RegistrationPage from './components/RegistrationPage';
+import EnrollmentPage from './components/EnrollmentPage';
 
 function App() {
   return (
       <Routes>
+        {/* Public routes */}
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/RegistrationPage" element={<RegistrationPage />} />
+        <Route path="/forgot" element={<ForgetPasswordPage />} />
+        <Route path="/enrollment" element={
+          <PrivateRoute>
+            <EnrollmentPage />
+          </PrivateRoute>
+        } />
+
+        
+        {/* Protected routes */}
         <Route
           path="/"
           element={
@@ -32,10 +46,10 @@ function App() {
           <Route path="corrections" element={<CorrectionsPage />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>
+        
         {/* Redirect any unknown route to login */}
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
-    
   );
 }
 
