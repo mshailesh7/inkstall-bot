@@ -4,6 +4,7 @@
   align-items: center;
   min-height: 100vh;
   background-color:#B3D9FF;
+  padding-right: 2px;
 }
 
 .login-box {
@@ -140,4 +141,9 @@
   border-radius: 4px;
   margin-bottom: 1rem;
   text-align: center;
+}
+
+.webkit-text-adjust {
+  -webkit-text-size-adjust: 115%;
+  text-size-adjust: 115%;
 }
