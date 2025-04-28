@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import logo from '../assets/inkstall.svg';
+import signup from '../assets/sign.png';
 
 const RegistrationPage = () => {
   const [formData, setFormData] = useState({
@@ -97,7 +98,7 @@ const RegistrationPage = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-blue-300 px-2 sm:px-4 md:px-0 webkit-text-adjust">
-      <div className="border-2 border-[#b7d8fb] bg-gradient-to-br from-[#e3f0ff] to-[#b3d1f8] rounded-2xl shadow-xl flex flex-col md:flex-row w-full max-w-3xl p-1 sm:p-2 md:p-4" style={{boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.18)'}}>
+      <div className="border-2 border-[#b7d8fb] bg-gradient-to-br from-[#ffff] to-[#ffff] rounded-2xl shadow-xl flex flex-col md:flex-row w-full max-w-3xl p-1 sm:p-2 md:p-4" style={{boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.18)',boxSizing: 'border-box', paddingTop: '2px', paddingBottom: '2px',borderWidth: '2px', paddingRight: '3px',}}>
         {/* Left side - Form */}
         <div className="w-full md:w-[60%] flex flex-col p-3 sm:p-4 md:p-6">
           <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-1">Sign Up</h2>
@@ -122,7 +123,7 @@ const RegistrationPage = () => {
                   type="text"
                   name="firstName"
                   placeholder="First Name"
-                  className="w-full bg-gradient-to-r from-[#b5d4fa] to-[#e3f0ff] border border-white rounded-lg px-4 py-2 placeholder-gray-600 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                  className="w-full bg-gradient-to-r from-[#DBEAFE] to-[#DBEAFE] border border-white rounded-lg px-4 py-2 placeholder-gray-600 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                   value={formData.firstName}
                   onChange={handleChange}
                   disabled={loading || success}
@@ -136,7 +137,7 @@ const RegistrationPage = () => {
                   type="text"
                   name="lastName"
                   placeholder="Last Name"
-                  className="w-full bg-gradient-to-r from-[#b5d4fa] to-[#e3f0ff] border border-white rounded-lg px-4 py-2 placeholder-gray-600 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                  className="w-full bg-gradient-to-r from-[#DBEAFE] to-[#DBEAFE] border border-white rounded-lg px-4 py-2 placeholder-gray-600 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                   value={formData.lastName}
                   onChange={handleChange}
                   disabled={loading || success}
@@ -151,7 +152,7 @@ const RegistrationPage = () => {
                 type="email"
                 name="email"
                 placeholder="Email"
-                className="w-full bg-gradient-to-r from-[#b5d4fa] to-[#e3f0ff] border border-white rounded-lg px-4 py-2 placeholder-gray-600 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                className="w-full bg-gradient-to-r from-[#DBEAFE] to-[#DBEAFE] border border-white rounded-lg px-4 py-2 placeholder-gray-600 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                 value={formData.email}
                 onChange={handleChange}
                 disabled={loading || success}
@@ -166,7 +167,7 @@ const RegistrationPage = () => {
                   type="password"
                   name="password"
                   placeholder="Password"
-                  className="w-full bg-gradient-to-r from-[#b5d4fa] to-[#e3f0ff] border border-white rounded-lg px-4 py-2 placeholder-gray-600 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                  className="w-full bg-gradient-to-r from-[#DBEAFE] to-[#DBEAFE] border border-white rounded-lg px-4 py-2 placeholder-gray-600 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                   value={formData.password}
                   onChange={handleChange}
                   disabled={loading || success}
@@ -180,7 +181,7 @@ const RegistrationPage = () => {
                   type="password"
                   name="confirmPassword"
                   placeholder="Confirm Password"
-                  className="w-full bg-gradient-to-r from-[#b5d4fa] to-[#e3f0ff] border border-white rounded-lg px-4 py-2 placeholder-gray-600 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                  className="w-full bg-gradient-to-r from-[#DBEAFE] to-[#DBEAFE] border border-white rounded-lg px-4 py-2 placeholder-gray-600 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   disabled={loading || success}
@@ -193,7 +194,7 @@ const RegistrationPage = () => {
             <div>
               <button
                 type="submit"
-                className="bg-white text-gray-800 font-medium border border-white rounded-lg px-4 py-2 hover:bg-blue-200 transition-colors inline-flex items-center shadow-sm w-full sm:w-auto justify-center"
+                className="bg-blue-100 text-gray-800 font-medium border border-white rounded-lg px-4 py-2 hover:bg-blue-200 transition-colors inline-flex items-center shadow-sm w-full sm:w-auto justify-center"
                 disabled={loading || success}
               >
                 {loading ? "Registering..." : "Register ›"}
@@ -210,30 +211,7 @@ const RegistrationPage = () => {
         
         {/* Right side - Illustration */}
         <div className="hidden sm:flex w-full md:w-[40%] items-center justify-center p-0 sm:p-2 mt-6 md:mt-0 order-2 md:order-none">
-          <div className="border-2 border-white rounded-2xl bg-gradient-to-tr from-blue-200 to-blue-400 flex items-center justify-center w-full h-[240px] min-h-[240px] sm:h-[320px] sm:min-h-[320px] md:h-[420px] md:min-h-[420px] m-0 md:m-2 relative">
-            {/* Rocket illustration */}
-            <svg className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 text-white" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2C9 2 4 3 4 10C4 14 6 16 8 16C9 16 9 15 9 14C9 13 10 12 12 12C14 12 15 13 15 14C15 15 15 16 16 16C18 16 20 14 20 10C20 3 15 2 12 2Z" fill="white"/>
-              <path d="M12 17C10.4 17 9 18 9 19C9 20 10 21 12 21C14 21 15 20 15 19C15 18 13.6 17 12 17Z" fill="white"/>
-              <path d="M12 5C13.1 5 14 5.9 14 7C14 8.1 13.1 9 12 9C10.9 9 10 8.1 10 7C10 5.9 10.9 5 12 5Z" fill="#3B82F6"/>
-            </svg>
-            
-            {/* Paper balls - responsive sizes */}
-            <div className="absolute bottom-8 left-8 w-6 h-6 sm:bottom-10 sm:left-10 sm:w-8 sm:h-8 md:bottom-12 md:left-12 md:w-10 md:h-10 rounded-full bg-white"></div>
-            <div className="absolute bottom-16 left-16 w-5 h-5 sm:bottom-20 sm:left-20 sm:w-6 sm:h-6 md:bottom-24 md:left-24 md:w-8 md:h-8 rounded-full bg-white"></div>
-            <div className="absolute bottom-12 right-10 w-7 h-7 sm:bottom-16 sm:right-14 sm:w-10 sm:h-10 md:bottom-20 md:right-16 md:w-12 md:h-12 rounded-full bg-white"></div>
-            <div className="absolute top-12 right-8 w-5 h-5 sm:top-16 sm:right-10 sm:w-7 sm:h-7 md:top-24 md:right-12 md:w-9 md:h-9 rounded-full bg-white"></div>
-            <div className="absolute bottom-20 left-10 w-4 h-4 sm:bottom-24 sm:left-12 sm:w-5 sm:h-5 md:bottom-32 md:left-16 md:w-7 md:h-7 rounded-full bg-white"></div>
-            <div className="absolute bottom-10 right-20 w-6 h-6 sm:bottom-12 sm:right-24 sm:w-8 sm:h-8 md:bottom-16 md:right-32 md:w-10 md:h-10 rounded-full bg-white"></div>
-            <div className="absolute top-20 left-12 w-5 h-5 sm:top-24 sm:left-16 sm:w-6 sm:h-6 md:top-32 md:left-20 md:w-8 md:h-8 rounded-full bg-white"></div>
-            
-            {/* Dotted flight paths */}
-            <svg className="absolute inset-0" width="100%" height="100%" viewBox="0 0 400 400" fill="none">
-              <path d="M100,100 Q150,150 200,120 T300,200" stroke="white" strokeWidth="2" strokeDasharray="5,5" fill="none" />
-              <path d="M150,200 Q200,150 250,180 T350,100" stroke="white" strokeWidth="2" strokeDasharray="5,5" fill="none" />
-              <path d="M120,250 Q170,200 220,230 T320,150" stroke="white" strokeWidth="2" strokeDasharray="5,5" fill="none" />
-            </svg>
-          </div>
+          <img src={signup} alt="Registration" className="w-full h-auto"style={{ borderRadius: '6px' }} />
         </div>
       </div>
     </div>

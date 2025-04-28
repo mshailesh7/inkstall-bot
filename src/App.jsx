@@ -15,6 +15,7 @@ import ForgetPasswordPage from './components/Forget';
 import RegistrationPage from './components/RegistrationPage';
 import EnrollmentPage from './components/EnrollmentPage';
 
+
 function App() {
   return (
       <Routes>
