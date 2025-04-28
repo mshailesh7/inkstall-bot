@@ -30,7 +30,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 
 import GeneratorSetupForm from './components/GeneratorSetupForm';
-import PdfUploadForm from './components/PdfUploadForm';
+import PdfUploadForm from './components/PdfUploaderForm';
 import { PDFDownloadLink, Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
 import inkstallLogo from '../../assets/inkstall.png';
 import axios from 'axios';
