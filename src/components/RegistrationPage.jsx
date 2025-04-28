@@ -206,6 +206,14 @@ const RegistrationPage = () => {
                 Login
               </a>
             </div>
+            <button
+    type="button"
+    onClick={() => window.location.href = "https://accounts.google.com/signin"}
+    className="bg-blue-100 text-blue-700 font-medium rounded-lg px-6 py-2 hover:bg-blue-200 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+    disabled={loading}
+    >
+    Login with Gmail
+  </button>
           </form>
         </div>
         

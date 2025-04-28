@@ -19,6 +19,7 @@ import {
     InputLabel,
     Select,
     MenuItem,
+    LinearProgress
 } from '@mui/material';
 
 // Icons
@@ -29,8 +30,10 @@ import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 
 import GeneratorSetupForm from './components/GeneratorSetupForm';
+import PdfUploadForm from './components/PdfUploadForm';
 import { PDFDownloadLink, Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
 import inkstallLogo from '../../assets/inkstall.png';
+import axios from 'axios';
 
 const subjects = [
   { id: 1, name: 'Physics', code: '0625' },
@@ -38,7 +41,7 @@ const subjects = [
   { id: 3, name: 'Biology', code: '0610' },
 ];
 
-const steps = ['Configure', 'Edit Questions', 'Finalize Paper'];
+const steps = ['Upload PDF', 'Configure', 'Edit Questions', 'Finalize Paper'];
 
 // PDF Styles
 const styles = StyleSheet.create({
@@ -200,6 +203,45 @@ const QuestionPaperPDF = ({ data }) => {
   );
 };
 
+// Helper function to get the auth token from session storage
+const getAuthToken = () => {
+  try {
+    const tokenData = sessionStorage.getItem('token');
+    if (tokenData) {
+      const parsedToken = JSON.parse(tokenData);
+      // Check if token is still valid
+      if (parsedToken.expiry && parsedToken.expiry > Date.now()) {
+        return parsedToken.value;
+      }
+    }
+    return ''; // Return empty string if no token or expired
+  } catch (error) {
+    console.error('Error retrieving auth token:', error);
+    return '';
+  }
+};
+
+// Helper function to validate token format
+const isValidTokenFormat = (token) => {
+  // Check if token exists and is not empty
+  if (!token || token.trim() === '') {
+    console.error('Token is empty or undefined');
+    return false;
+  }
+  
+  // Basic format validation - tokens are typically non-trivial strings
+  // You might want to add more specific validation based on your token format
+  if (token.length < 10) {
+    console.error('Token is too short, likely invalid');
+    return false;
+  }
+  
+  // Log token format for debugging (first few characters only for security)
+  console.log('Token format check: ', token.substring(0, 5) + '...' + token.substring(token.length - 5));
+  
+  return true;
+};
+
 const PaperGeneratorPage = () => {
   const [activeStep, setActiveStep] = useState(0);
   const [paperConfig, setPaperConfig] = useState(null);
@@ -208,8 +250,6 @@ const PaperGeneratorPage = () => {
   const [generationError, setGenerationError] = useState(null);
   const [generatedQuestions, setGeneratedQuestions] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  
-  // Current question being edited
   const [currentQuestion, setCurrentQuestion] = useState({
     id: 0,
     text: '',
@@ -229,6 +269,12 @@ const PaperGeneratorPage = () => {
     timeLimit: 60,
     questions: []
   });
+  
+  // New state for PDF upload
+  const [extractedText, setExtractedText] = useState('');
+  const [pageRange, setPageRange] = useState('');
+
+  const [generationProgress, setGenerationProgress] = useState(0); // Add progress state for question generation
 
   const handleNext = () => {
     if (activeStep === steps.length - 1) {
@@ -241,8 +287,14 @@ const PaperGeneratorPage = () => {
   const handleBack = () => {
     setActiveStep(prevActiveStep => prevActiveStep - 1);
   };
+  
+  // Handle PDF upload completion
+  const handlePdfUploadComplete = (text, range) => {
+    setExtractedText(text);
+    setPageRange(range);
+  };
 
-  const handleGenerateSubmit = (formData) => {
+  const handleGenerateSubmit = async (formData, token) => {
     // If formData is a FormData object (from the form), extract the config
     // If it's already processed data (from the API response), use it directly
     const isProcessedData = formData.questions !== undefined;
@@ -261,8 +313,51 @@ const PaperGeneratorPage = () => {
       
       setPaperConfig(config);
       
+      // Log the questions data for debugging
+      console.log('Questions data type:', typeof questionData.questions);
+      console.log('Questions data:', questionData.questions);
+      
+      // Ensure questions is an array before mapping
+      let questionsArray = [];
+      
+      // Handle different response formats
+      if (Array.isArray(questionData.questions)) {
+        questionsArray = questionData.questions;
+      } else if (typeof questionData.questions === 'object' && questionData.questions !== null) {
+        // If it's an object but not an array, it might be a single question or have a nested structure
+        if (questionData.questions.questions && Array.isArray(questionData.questions.questions)) {
+          questionsArray = questionData.questions.questions;
+        } else {
+          // Try to convert the object to an array if it has question-like properties
+          questionsArray = [questionData.questions];
+        }
+      } else if (typeof questionData.questions === 'string') {
+        // If it's a string, it might be a JSON string
+        try {
+          const parsed = JSON.parse(questionData.questions);
+          if (Array.isArray(parsed)) {
+            questionsArray = parsed;
+          } else if (parsed.questions && Array.isArray(parsed.questions)) {
+            questionsArray = parsed.questions;
+          } else {
+            questionsArray = [parsed];
+          }
+        } catch (e) {
+          console.error('Failed to parse questions string:', e);
+          setGenerationError('Invalid response format from the server');
+          return;
+        }
+      }
+      
+      // If we still don't have an array, create a default one
+      if (questionsArray.length === 0) {
+        console.error('Could not extract questions array from response');
+        setGenerationError('No questions were returned from the server');
+        return;
+      }
+      
       // Transform questions to match the expected format
-      const formattedQuestions = questionData.questions.map((q, index) => ({
+      const formattedQuestions = questionsArray.map((q, index) => ({
         id: index + 1,
         text: q.question || q.text,
         modelAnswer: q.answer || q.correctAnswer || q.modelAnswer || '',
@@ -314,7 +409,117 @@ const PaperGeneratorPage = () => {
         setCurrentQuestionIndex(0);
       }
       
-      setActiveStep(1); // Move to question editing step
+      setActiveStep(2); // Move to question editing step (now step 3)
+    } else {
+      // This is a form submission from the configuration step
+      setLoading(true);
+      setGenerationError(null);
+      
+      try {
+        // Use the extracted text from PDF upload step to generate questions
+        const requestData = new FormData();
+        
+        // Convert the extracted text to a file and append it to the FormData
+        if (extractedText) {
+          // Create a Blob from the extracted text
+          const textBlob = new Blob([extractedText], { type: 'text/plain' });
+          
+          // Create a File object from the Blob
+          const textFile = new File([textBlob], 'extracted_text.txt', { type: 'text/plain' });
+          
+          // Append the file to the FormData
+          requestData.append('file', textFile);
+        } else {
+          console.error('No extracted text available');
+          setGenerationError('No text extracted from PDF. Please try uploading again.');
+          setLoading(false);
+          return;
+        }
+        
+        // Append other form data
+        requestData.append('subject', formData.get('subject'));
+        requestData.append('difficulty', formData.get('difficulty'));
+        requestData.append('questionTypes', formData.get('questionTypes'));
+        requestData.append('numQuestions', formData.get('numQuestions'));
+        requestData.append('totalMarks', formData.get('totalMarks') || 100);
+        requestData.append('paperTitle', formData.get('paperTitle') || `${subjects.find(s => s.id.toString() === formData.get('subject')).name} Exam`);
+        requestData.append('timeLimit', formData.get('timeLimit') || 60);
+        
+        // Debug logs for request data and token
+        console.log('Form data being sent to API:');
+        for (let [key, value] of requestData.entries()) {
+          console.log(`${key}: ${value instanceof File ? 'File: ' + value.name : value}`);
+        }
+        
+        // Validate token format
+        const tokenToUse = token || getAuthToken();
+        const isValidToken = isValidTokenFormat(tokenToUse);
+        console.log('Is token valid format:', isValidToken);
+        
+        if (!isValidToken) {
+          console.error('Invalid token format, authentication will likely fail');
+          // You might want to handle this case, e.g., redirect to login
+        }
+        
+        // Reset progress
+        setGenerationProgress(0);
+        
+        // Start progress simulation for question generation
+        const simulationTime = 30000; // 30 seconds simulation time
+        const progressInterval = setInterval(() => {
+          setGenerationProgress(prev => {
+            const newProgress = prev + 2; // Increase by 2% for a more gradual progress
+            if (newProgress >= 95) { // Only go up to 95% for simulation
+              clearInterval(progressInterval);
+              return 95;
+            }
+            return newProgress;
+          });
+        }, simulationTime / 50); // 50 steps to reach 95%
+        
+        // Send request to generate questions API - using the proxy configured in vite.config.js
+        const response = await axios.post('/api/questions/generate', requestData, {
+          headers: {
+            'Content-Type': 'multipart/form-data', // Change content type to multipart/form-data
+            'Authorization': `Bearer ${tokenToUse}` // Use validated token
+          },
+          // Increase timeout for long processing (60 minutes)
+          timeout: 60 * 60 * 1000,
+          // Set maximum content length to handle large responses
+          maxContentLength: 100 * 1024 * 1024,
+          maxBodyLength: 100 * 1024 * 1024
+        });
+        
+        // Clear the progress interval if it's still running
+        clearInterval(progressInterval);
+        
+        // Set progress to 100% when response is received
+        setGenerationProgress(100);
+        
+        // Add a small delay before processing the response to show 100% progress
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Process the response
+        const questionData = {
+          paperTitle: formData.get('paperTitle') || `${subjects.find(s => s.id.toString() === formData.get('subject')).name} Exam`,
+          subject: formData.get('subject'),
+          totalMarks: formData.get('totalMarks') || 100,
+          timeLimit: formData.get('timeLimit') || 60,
+          questions: response.data
+        };
+        
+        // Log the response data structure for debugging
+        console.log('API Response data:', response.data);
+        console.log('Question data structure:', questionData);
+        
+        // Call the existing handler with the processed data
+        handleGenerateSubmit(questionData, token);
+      } catch (error) {
+        console.error('Error generating questions:', error);
+        setGenerationError(error.response?.data?.message || 'Failed to generate questions. Please try again.');
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -326,7 +531,7 @@ const PaperGeneratorPage = () => {
     // Update PDF data with the new question
     const updatedPdfData = {
       ...pdfData,
-      questions: [...pdfData.questions, currentQuestion],
+      questions: [...pdfData.questions, {...currentQuestion}],
       totalMarks: pdfData.questions.reduce((sum, q) => sum + q.marks, 0) + currentQuestion.marks
     };
     setPdfData(updatedPdfData);
@@ -339,7 +544,7 @@ const PaperGeneratorPage = () => {
     } else {
       // If no more generated questions, prepare a new empty question
       const newQuestion = {
-        id: questions.length + 1,
+        id: pdfData.questions.length + 1,
         text: '',
         modelAnswer: '',
         type: 'MCQ',
@@ -508,17 +713,63 @@ const PaperGeneratorPage = () => {
         
         <ResponsiveStepper />
         
-        {/* Step 1: Configure */}
+        {/* Step 1: Upload PDF */}
         {activeStep === 0 && (
-          <GeneratorSetupForm 
-            onSubmit={handleGenerateSubmit} 
-            isGenerating={loading} 
+          <PdfUploadForm 
+            onUploadComplete={handlePdfUploadComplete}
             handleNext={handleNext}
           />
         )}
 
-        {/* Step 2: Edit Questions */}
+        {/* Step 2: Configure */}
         {activeStep === 1 && (
+          <Box sx={{ width: '100%', p: 3 }}>
+            <Typography variant="h5" gutterBottom>
+              Configure Paper
+            </Typography>
+            
+            {/* Show progress bar during question generation */}
+            {loading && (
+              <Box sx={{ width: '100%', mb: 4 }}>
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                  Generating questions... This may take a few minutes.
+                </Typography>
+                <LinearProgress 
+                  variant="determinate" 
+                  value={generationProgress} 
+                  sx={{ 
+                    height: 10, 
+                    borderRadius: 5,
+                    '& .MuiLinearProgress-bar': {
+                      backgroundColor: 'black',
+                    }
+                  }} 
+                />
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    {generationProgress}%
+                  </Typography>
+                </Box>
+              </Box>
+            )}
+            
+            <GeneratorSetupForm
+              onSubmit={handleGenerateSubmit}
+              isGenerating={loading}
+              handleNext={handleNext}
+              extractedText={extractedText}
+            />
+            
+            {generationError && (
+              <Alert severity="error" sx={{ mt: 2 }}>
+                {generationError}
+              </Alert>
+            )}
+          </Box>
+        )}
+
+        {/* Step 3: Edit Questions */}
+        {activeStep === 2 && (
           <Grid container spacing={3}>
             {/* Left Container: Question Editor */}
             <Grid item xs={12} md={6}>
@@ -730,7 +981,7 @@ const PaperGeneratorPage = () => {
           </Grid>
         )}
 
-        {activeStep === 2 && (
+        {activeStep === 3 && (
           <Box className="space-y-4">
             <Card>
               <CardHeader title="Final Paper Preview" />

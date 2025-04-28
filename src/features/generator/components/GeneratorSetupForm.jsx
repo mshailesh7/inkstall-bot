@@ -1,7 +1,24 @@
 import React, { useState } from 'react';
 import { Box, Button, TextField, FormControl, InputLabel, Select, MenuItem, Typography, Paper, Stack, Alert, Snackbar } from '@mui/material';
-import { Upload } from '@mui/icons-material';
 import { generateQuestions } from '../../../services/apiClient';
+
+// Helper function to get the auth token from session storage
+const getAuthToken = () => {
+  try {
+    const tokenData = sessionStorage.getItem('token');
+    if (tokenData) {
+      const parsedToken = JSON.parse(tokenData);
+      // Check if token is still valid
+      if (parsedToken.expiry && parsedToken.expiry > Date.now()) {
+        return parsedToken.value;
+      }
+    }
+    return ''; // Return empty string if no token or expired
+  } catch (error) {
+    console.error('Error retrieving auth token:', error);
+    return '';
+  }
+};
 
 // Static subject data
 const SUBJECTS = [
@@ -17,9 +34,8 @@ const SUBJECTS = [
     { id: 'social-science', name: 'Social Science' }
 ];
 
-const GeneratorSetupForm = ({ onSubmit, isGenerating, handleNext }) => {
-    // --- State for subjects ---
-    const [uploadedFile, setUploadedFile] = useState(null);
+const GeneratorSetupForm = ({ onSubmit, isGenerating, handleNext, extractedText }) => {
+    // --- State for form ---
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
@@ -28,7 +44,6 @@ const GeneratorSetupForm = ({ onSubmit, isGenerating, handleNext }) => {
 
     // --- Form State ---
     const [subjectId, setSubjectId] = useState('science'); // Default to Science
-    const [range, setRange] = useState('');
     const [numQuestions, setNumQuestions] = useState(10);
     const [selectedQuestionTypes, setSelectedQuestionTypes] = useState(['MCQ', 'Structured']);
     const [difficulty, setDifficulty] = useState('Medium');
@@ -36,67 +51,50 @@ const GeneratorSetupForm = ({ onSubmit, isGenerating, handleNext }) => {
     const [totalMarks, setTotalMarks] = useState(undefined);
     const [timeLimit, setTimeLimit] = useState(undefined);
 
-    // --- Handle PDF Upload ---
-    const handleFileUpload = (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            setUploadedFile(file);
-        }
-    };
-
     // --- Handle Form Submission ---
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
-        if (!uploadedFile) {
-            setError("Please upload a textbook PDF file");
-            return;
-        }
         
         setLoading(true);
         setError(null);
         
         const formData = new FormData();
-        formData.append('file', uploadedFile);
         formData.append('subject', subjectId);
         formData.append('difficulty', difficulty);
         formData.append('questionTypes', JSON.stringify(selectedQuestionTypes));
         formData.append('numQuestions', numQuestions);
         formData.append('totalMarks', totalMarks || 100);
         formData.append('paperTitle', paperTitle || `${SUBJECTS.find(s => s.id === subjectId).name} Exam`);
-        formData.append('range', range);
+        formData.append('timeLimit', timeLimit || 60);
         
-        try {
-            const result = await generateQuestions(formData);
-            setSuccess(true);
-            
-            // Store the generated questions for PDF generation
-            const questionPaperData = {
-                paperTitle: paperTitle || `${SUBJECTS.find(s => s.id === subjectId).name} Exam`,
-                subject: SUBJECTS.find(s => s.id === subjectId).name,
-                totalMarks: totalMarks || 100,
-                timeLimit: timeLimit,
-                questions: result.questions || result
-            };
-            
-            setGeneratedQuestions(questionPaperData);
-            setShowPdfPreview(true);
-            
-            // If parent component provided an onSubmit callback, call it with the result
-            if (onSubmit && typeof onSubmit === 'function') {
-                // Pass the formatted data directly to the parent component
-                onSubmit(questionPaperData);
-            }
-            
-            // If parent component provided a handleNext callback, call it
-            if (handleNext && typeof handleNext === 'function') {
-                handleNext();
-            }
-        } catch (err) {
-            setError(err.response?.data?.message || "Failed to generate questions. Please try again.");
-        } finally {
+        // Add authorization token to the form data
+        const token = getAuthToken();
+        console.log('Token in GeneratorSetupForm:', token ? 'Token exists' : 'No token found');
+        // console.log('Token value:', token);
+        
+        // Log form data for debugging
+        // console.log('Form data values:');
+        // for (let [key, value] of formData.entries()) {
+        //     console.log(`${key}: ${value}`);
+        // }
+        
+        if (!token) {
+            setError("Authentication token not found. Please log in again.");
             setLoading(false);
+            return;
         }
+        
+        // If we have extracted text from PDF, we don't need to upload a file
+        if (extractedText) {
+            // Pass the form data and token to the parent component
+            if (onSubmit && typeof onSubmit === 'function') {
+                // Pass token along with form data
+                onSubmit(formData, token);
+            }
+            return;
+        }
+        
+        setLoading(false);
     };
 
     // Close the success notification
@@ -111,8 +109,22 @@ const GeneratorSetupForm = ({ onSubmit, isGenerating, handleNext }) => {
 
     return (
         <Paper elevation={3} sx={{ p: 3 }}>
+            <Typography variant="h5" gutterBottom>
+                Configure Paper
+            </Typography>
+            
+            <Typography variant="body1" sx={{ mb: 3 }}>
+                {extractedText ? 'PDF has been processed. Now set parameters to generate questions.' : 'Set parameters to generate questions from your uploaded PDF.'}
+            </Typography>
+            
             <form onSubmit={handleSubmit}>
                 <Stack spacing={3}>
+                    {extractedText && (
+                        <Alert severity="success" sx={{ mb: 2 }}>
+                            PDF successfully processed. Text extracted and ready for question generation.
+                        </Alert>
+                    )}
+                    
                     <FormControl fullWidth>
                         <InputLabel>Subject</InputLabel>
                         <Select
@@ -127,38 +139,6 @@ const GeneratorSetupForm = ({ onSubmit, isGenerating, handleNext }) => {
                             ))}
                         </Select>
                     </FormControl>
-
-                    <TextField
-                        fullWidth
-                        label="Page Range"
-                        value={range}
-                        onChange={(e) => setRange(e.target.value)}
-                        placeholder="e.g., 1-10 or 15-25"
-                        helperText="Enter the page range from your textbook"
-                    />
-
-                    <Box>
-                        <Typography variant="subtitle1" gutterBottom>
-                            Upload Textbook
-                        </Typography>
-                        <input
-                            accept=".pdf"
-                            style={{ display: 'none' }}
-                            id="textbook-upload"
-                            type="file"
-                            onChange={handleFileUpload}
-                        />
-                        <label htmlFor="textbook-upload">
-                            <Button
-                                variant="contained"
-                                component="span"
-                                startIcon={<Upload />}
-                                fullWidth
-                            >
-                                {uploadedFile ? uploadedFile.name : 'Upload Textbook PDF'}
-                            </Button>
-                        </label>
-                    </Box>
 
                     <FormControl fullWidth>
                         <InputLabel>Question Types</InputLabel>

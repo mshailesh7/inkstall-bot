@@ -22,10 +22,24 @@ const DashboardPage = () => {
   // State to control the intro visibility
   const [showIntro, setShowIntro] = useState(false);
   const [showContent, setShowContent] = useState(true);
+  const [userName, setUserName] = useState('');
   
   // Effect to check if welcome message should be shown (only after login)
   useEffect(() => {
     const shouldShowWelcome = localStorage.getItem('showWelcome') === 'true';
+    
+    // Get user data from session storage
+    try {
+      const userData = sessionStorage.getItem('user');
+      if (userData) {
+        const user = JSON.parse(userData);
+        // Use the user's name, email, or a default greeting
+        setUserName(user.name || user.firstName || user.email?.split('@')[0] || 'there');
+      }
+    } catch (error) {
+      console.error('Error parsing user data:', error);
+      setUserName('there'); // Fallback
+    }
     
     if (shouldShowWelcome) {
       // Show welcome message
@@ -183,7 +197,7 @@ const DashboardPage = () => {
               },
             }}
           >
-            Hey John, Welcome Back
+            Hey {userName}, Welcome Back
           </Typography>
         </Box>
       )}
@@ -495,4 +509,3 @@ const DashboardPage = () => {
 };
 
 export default DashboardPage;
- 
