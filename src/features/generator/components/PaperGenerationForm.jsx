@@ -41,6 +41,8 @@ const PaperGenerationForm = ({ onSubmit, isGenerating, pdfText, onFileUpload }) 
   const [file, setFile] = useState(null);
   const [fileName, setFileName] = useState('');
   const [fileSize, setFileSize] = useState('');
+  const [pageRanges, setPageRanges] = useState('');
+  const [processingMessage, setProcessingMessage] = useState('');
 
   // Options for dropdowns (populated dynamically)
   const [availableBoards, setAvailableBoards] = useState([]);
@@ -170,6 +172,10 @@ const PaperGenerationForm = ({ onSubmit, isGenerating, pdfText, onFileUpload }) 
         // Randomize the increment between 1-2% for more genuine appearance
         const randomIncrement = Math.floor(Math.random() * 2) + 1;
         const newProgress = prev + randomIncrement;
+        
+        // Update the processing message based on progress
+        updateProcessingMessage(newProgress);
+        
         return newProgress >= 98 ? 98 : newProgress;
       });
     }, 1000); // 1000ms = 1 second
@@ -201,6 +207,7 @@ const PaperGenerationForm = ({ onSubmit, isGenerating, pdfText, onFileUpload }) 
       formData.append('promptTemplate', promptTemplate);
       formData.append('paperTitle', paperTitle);
       formData.append('difficulty', difficulty);
+      formData.append('pageRanges', pageRanges);
       
     //   console.log('Sending request with token:', token.substring(0, 20) + '...');
       
@@ -238,6 +245,21 @@ const PaperGenerationForm = ({ onSubmit, isGenerating, pdfText, onFileUpload }) 
     }
   };
 
+  // Helper function to update processing message based on progress
+  const updateProcessingMessage = (progress) => {
+    if (progress < 20) {
+      setProcessingMessage('Analyzing document structure...');
+    } else if (progress < 40) {
+      setProcessingMessage('Extracting content from selected pages...');
+    } else if (progress < 60) {
+      setProcessingMessage('Identifying potential questions...');
+    } else if (progress < 80) {
+      setProcessingMessage('Formulating answer options...');
+    } else {
+      setProcessingMessage('Finalizing question paper format...');
+    }
+  };
+
   // Clean up interval on unmount
   useEffect(() => {
     return () => {
@@ -270,18 +292,24 @@ const PaperGenerationForm = ({ onSubmit, isGenerating, pdfText, onFileUpload }) 
               Upload File
             </Typography>
             
-            <Box 
-              sx={{ 
-                border: '2px dashed #3f51b5', 
-                borderRadius: 2, 
-                p: 3, 
-                textAlign: 'center',
+            <Box
+              sx={{
+                border: '2px dashed #1976d2',
+                borderRadius: 2,
+                p: 3,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                minHeight: 200,
                 mb: 2,
                 backgroundColor: '#f5f8ff',
                 transition: 'all 0.3s ease',
                 '&:hover': {
                   backgroundColor: '#eef2ff',
-                  borderColor: '#2196f3'
+                  borderColor: '#2196f3',
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
                 }
               }}
             >
@@ -298,12 +326,17 @@ const PaperGenerationForm = ({ onSubmit, isGenerating, pdfText, onFileUpload }) 
                   component="span"
                   sx={{ 
                     mb: 2,
-                    backgroundColor: '#3f51b5',
+                    backgroundColor: '#1976d2',
                     '&:hover': {
-                      backgroundColor: '#303f9f'
-                    }
+                      backgroundColor: '#1565c0',
+                      transform: 'scale(1.05)'
+                    },
+                    transition: 'all 0.2s ease',
+                    px: 3,
+                    py: 1.2,
+                    borderRadius: 2
                   }}
-                  startIcon={<span role="img" aria-label="upload">📄</span>}
+                  startIcon={<span role="img" aria-label="upload" style={{ fontSize: '1.2rem' }}>📄</span>}
                 >
                   Choose File
                 </Button>
@@ -314,11 +347,13 @@ const PaperGenerationForm = ({ onSubmit, isGenerating, pdfText, onFileUpload }) 
                   mt: 2, 
                   p: 2, 
                   border: '1px solid #e0e0e0', 
-                  borderRadius: 1,
+                  borderRadius: 2,
                   display: 'flex',
                   alignItems: 'center',
                   flexDirection: 'column',
-                  backgroundColor: '#fff'
+                  backgroundColor: '#fff',
+                  width: '100%',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
                 }}>
                   <Typography variant="subtitle1" fontWeight="bold" color="primary">
                     {fileName}
@@ -335,17 +370,40 @@ const PaperGenerationForm = ({ onSubmit, isGenerating, pdfText, onFileUpload }) 
                       setFileName('');
                       setFileSize('');
                     }}
-                    sx={{ mt: 1 }}
+                    sx={{ 
+                      mt: 1,
+                      borderRadius: 4,
+                      px: 2
+                    }}
                   >
                     Remove
                   </Button>
                 </Box>
               ) : (
-                <Typography color="text.secondary">
-                  Drag and drop a file here, or click to select a file
-                </Typography>
+                <Box sx={{ textAlign: 'center' }}>
+                  <Typography variant="body1" color="text.secondary" sx={{ mb: 1 }}>
+                    Drag and drop a file here, or click to select a file
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Supported formats: PDF, DOC, DOCX, TXT
+                  </Typography>
+                </Box>
               )}
             </Box>
+          </Box>
+          
+          {/* Page Ranges Input - Moved to appear right after file upload */}
+          <Box sx={{ mt: 2, mb: 2 }}>
+            <Typography variant="subtitle1" gutterBottom>
+              Page Ranges
+            </Typography>
+            <TextField
+              fullWidth
+              label="Page Ranges (e.g., 1-5,8,10-12)"
+              value={pageRanges}
+              onChange={(e) => setPageRanges(e.target.value)}
+              helperText="Specify page ranges to extract questions from (optional). Format: 1-5,8,10-12"
+            />
           </Box>
           
           <Divider />
@@ -417,14 +475,6 @@ const PaperGenerationForm = ({ onSubmit, isGenerating, pdfText, onFileUpload }) 
                 </Select>
               </FormControl>
               
-              <TextField
-                fullWidth
-                label="Paper Title"
-                value={paperTitle}
-                onChange={(e) => setPaperTitle(e.target.value)}
-                required
-              />
-              
               <FormControl fullWidth>
                 <InputLabel>Difficulty Level</InputLabel>
                 <Select
@@ -441,17 +491,25 @@ const PaperGenerationForm = ({ onSubmit, isGenerating, pdfText, onFileUpload }) 
           </Box>
           
           {(loading || isGenerating) && uploadProgress > 0 && uploadProgress < 100 && (
-            <Box sx={{ width: '100%', mt: 2 }}>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                Uploading and processing: {uploadProgress}%
-              </Typography>
-              <Box sx={{ width: '100%', mr: 1 }}>
-                <LinearProgress variant="determinate" value={uploadProgress} 
+            <Box sx={{ width: '100%', mt: 3, mb: 3 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                <Typography variant="body2" fontWeight="medium" color="primary">
+                  Uploading and processing
+                </Typography>
+                <Typography variant="body2" fontWeight="bold" color="primary">
+                  {uploadProgress}%
+                </Typography>
+              </Box>
+              <Box sx={{ width: '100%', position: 'relative' }}>
+                <LinearProgress 
+                  variant="determinate" 
+                  value={uploadProgress} 
                   sx={{
                     height: 10,
                     borderRadius: 5,
                     '& .MuiLinearProgress-bar': {
-                      backgroundColor: '#3f51b5',
+                      backgroundColor: '#1976d2',
+                      borderRadius: 5,
                     },
                     backgroundColor: '#e0e0e0'
                   }}
@@ -461,21 +519,72 @@ const PaperGenerationForm = ({ onSubmit, isGenerating, pdfText, onFileUpload }) 
           )}
           
           {(loading || isGenerating) && generationProgress > 0 && generationProgress < 100 && (
-            <Box sx={{ width: '100%', mt: 2 }}>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                Generating questions: {generationProgress}%
-              </Typography>
-              <Box sx={{ width: '100%', mr: 1 }}>
-                <LinearProgress variant="determinate" value={generationProgress} 
+            <Box sx={{ width: '100%', mt: 3, mb: 4 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                <Typography variant="body2" fontWeight="medium" color="primary">
+                  Generating questions
+                </Typography>
+                <Typography variant="body2" fontWeight="bold" color="primary">
+                  {generationProgress}%
+                </Typography>
+              </Box>
+              <Box sx={{ width: '100%' }}>
+                <LinearProgress 
+                  variant="determinate" 
+                  value={generationProgress} 
                   sx={{
                     height: 10,
                     borderRadius: 5,
                     '& .MuiLinearProgress-bar': {
-                      backgroundColor: '#3f51b5',
+                      backgroundColor: '#1976d2',
+                      borderRadius: 5,
+                      transition: 'transform 0.4s linear'
                     },
                     backgroundColor: '#e0e0e0'
                   }}
                 />
+              </Box>
+              
+              {/* Processing message in its own container with proper spacing */}
+              <Box sx={{ 
+                width: '100%',
+                mt: 2,
+                p: 1.5,
+                backgroundColor: '#f5f8ff',
+                borderRadius: 1,
+                border: '1px solid #e0e0e0',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                animation: 'pulse 2s infinite',
+                '@keyframes pulse': {
+                  '0%': { backgroundColor: '#f5f8ff' },
+                  '50%': { backgroundColor: '#eef2ff' },
+                  '100%': { backgroundColor: '#f5f8ff' }
+                }
+              }}>
+                <Box sx={{ 
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1
+                }}>
+                  {/* Simple loading spinner */}
+                  <Box sx={{ 
+                    width: 16, 
+                    height: 16, 
+                    borderRadius: '50%', 
+                    border: '2px solid #e0e0e0',
+                    borderTopColor: '#1976d2',
+                    animation: 'spin 1s linear infinite',
+                    '@keyframes spin': {
+                      '0%': { transform: 'rotate(0deg)' },
+                      '100%': { transform: 'rotate(360deg)' }
+                    }
+                  }} />
+                  <Typography variant="body2" color="text.secondary">
+                    {processingMessage}
+                  </Typography>
+                </Box>
               </Box>
             </Box>
           )}
@@ -486,7 +595,16 @@ const PaperGenerationForm = ({ onSubmit, isGenerating, pdfText, onFileUpload }) 
             color="primary"
             fullWidth
             disabled={loading || isGenerating || !file || !board || !classLevel || !subject || !paperType}
-            sx={{ mt: 2 }}
+            sx={{ 
+              mt: 2,
+              backgroundColor: '#1976d2',
+              '&:hover': {
+                backgroundColor: '#1565c0'
+              },
+              '&.Mui-disabled': {
+                backgroundColor: 'rgba(25, 118, 210, 0.5)'
+              }
+            }}
           >
             {loading || isGenerating ? (
               <>

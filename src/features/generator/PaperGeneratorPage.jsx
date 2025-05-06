@@ -15,11 +15,6 @@ import {
     Divider,
     IconButton,
     Alert,
-    FormControl,
-    InputLabel,
-    Select,
-    MenuItem,
-    LinearProgress,
     Dialog,
     DialogTitle,
     DialogContent,
@@ -28,8 +23,6 @@ import {
 
 // Icons
 import AddIcon from '@mui/icons-material/Add';
-import DeleteIcon from '@mui/icons-material/Delete';
-import RefreshIcon from '@mui/icons-material/Refresh';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 
@@ -46,7 +39,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column', 
     backgroundColor: '#ffffff', 
     padding: 30,
-    fontFamily: 'Helvetica'
+    fontFamily: 'Times-Roman'
   },
   header: {
     marginBottom: 20,
@@ -70,13 +63,13 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 10,
-    fontFamily: 'Helvetica'
+    fontFamily: 'Times-Roman'
   },
   subHeader: {
     fontSize: 12,
     marginBottom: 5,
     textAlign: 'center',
-    fontFamily: 'Helvetica'
+    fontFamily: 'Times-Roman'
   },
   questionSection: {
     marginTop: 20
@@ -86,7 +79,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 10,
     marginTop: 15,
-    fontFamily: 'Helvetica'
+    fontFamily: 'Times-Roman'
   },
   questionContainer: {
     marginBottom: 15
@@ -94,17 +87,17 @@ const styles = StyleSheet.create({
   question: {
     fontSize: 11,
     marginBottom: 5,
-    fontFamily: 'Helvetica'
+    fontFamily: 'Times-Roman'
   },
   marks: {
     fontSize: 10,
     fontStyle: 'italic',
-    fontFamily: 'Helvetica'
+    fontFamily: 'Times-Roman'
   },
   options: {
     marginLeft: 20,
     fontSize: 10,
-    fontFamily: 'Helvetica'
+    fontFamily: 'Times-Roman'
   },
   option: {
     marginBottom: 3
@@ -118,8 +111,22 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     borderTop: 1,
     fontSize: 8,
-    fontFamily: 'Helvetica',
+    fontFamily: 'Times-Roman',
+    fontStyle: 'italic',
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  },
+  footerText: {
+    fontSize: 8,
+    fontFamily: 'Times-Roman',
     fontStyle: 'italic'
+  },
+  footerLogo: {
+    width: 50,
+    height: 25,
+    opacity: 0.7
   },
   instructionsSection: {
     marginTop: 20
@@ -127,34 +134,20 @@ const styles = StyleSheet.create({
   instruction: {
     fontSize: 10,
     marginBottom: 5,
-    fontFamily: 'Helvetica'
-  },
-  watermark: {
-    position: 'absolute',
-    bottom: 200,
-    left: 200,
-    // right: 0,
-    opacity: 0.1,
-    zIndex: -1
-  },
-  watermarkImage: {
-    width: 400,
-    height: 200,
-    opacity: 0.1,
-    zIndex: -1
+    fontFamily: 'Times-Roman'
   },
   bestOfLuck: {
     fontSize: 14,
     fontWeight: 'bold',
     textAlign: 'center',
     marginTop: 20,
-    fontFamily: 'Helvetica'
+    fontFamily: 'Times-Roman'
   },
   questionsHeading: {
     fontSize: 14,
     fontWeight: 'bold',
     marginBottom: 10,
-    fontFamily: 'Helvetica'
+    fontFamily: 'Times-Roman'
   }
 });
 
@@ -165,7 +158,7 @@ const QuestionPaperPDF = ({ data }) => {
     return (
       <Document>
         <Page size="A4" style={styles.page}>
-          <Text>No valid data available</Text>
+          <Text>No valid data available could be the AI error please try again or contact the devepoler for enhancement</Text>
         </Page>
       </Document>
     );
@@ -181,82 +174,64 @@ const QuestionPaperPDF = ({ data }) => {
   // Get the questions array safely
   const questions = Array.isArray(data.questions) ? data.questions : [];
   
-  // Create a watermark component to reuse on each page
-  const Watermark = () => (
-    <View style={styles.watermark}>
-      <Image src={inkstallLogo} style={styles.watermarkImage} />
-    </View>
-  );
-  
-  // Calculate how many questions to show per page (roughly 10 per page)
-  const questionsPerPage = 10;
-  const totalPages = Math.ceil(questions.length / questionsPerPage);
-  
-  // Create an array of pages
-  const pages = Array.from({ length: totalPages }, (_, pageIndex) => {
-    const startIdx = pageIndex * questionsPerPage;
-    const endIdx = Math.min(startIdx + questionsPerPage, questions.length);
-    const pageQuestions = questions.slice(startIdx, endIdx);
-    
-    return (
-      <Page key={pageIndex} size="A4" style={styles.page}>
-        {/* Header only on first page */}
-        {pageIndex === 0 && (
-          <>
-            <View style={styles.header}>
-              <View style={styles.headerContent}>
-                <Image src={inkstallLogo} style={styles.logo} />
-                <Text style={styles.title}>{paperTitle}</Text>
-                <Text style={styles.subHeader}>Paper Code: {paperCode}</Text>
-                <Text style={styles.subHeader}>Tier: {paperTier}</Text>
-                <Text style={styles.subHeader}>
-                  Time: {paperTime} minutes | Total Marks: {paperMarks}
-                </Text>
-              </View>
-            </View>
-            
-            {/* Instructions Section */}
-            <View style={styles.instructionsSection}>
-              <Text style={styles.sectionTitle}>INSTRUCTIONS TO CANDIDATES</Text>
-              {Array.isArray(data.paper?.instructions) && 
-                data.paper.instructions.map((instr, i) => (
-                  <Text key={i} style={styles.instruction}>• {instr}</Text>
-                ))
-              }
-            </View>
-            
-            {/* Information Section */}
-            <View style={styles.instructionsSection}>
-              <Text style={styles.sectionTitle}>INFORMATION FOR CANDIDATES</Text>
-              {Array.isArray(data.paper?.information) && 
-                data.paper.information.map((info, i) => (
-                  <Text key={i} style={styles.instruction}>• {info}</Text>
-                ))
-              }
-            </View>
-            
-            {/* Questions Heading */}
-            <View style={styles.instructionsSection}>
-              <Text style={styles.sectionTitle}>QUESTIONS</Text>
-            </View>
-          </>
-        )}
+  // Create a document with dynamic pages
+  return (
+    <Document>
+      {/* First page with header, instructions, and first set of questions */}
+      <Page size="A4" style={styles.page}>
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.headerContent}>
+            <Image src={inkstallLogo} style={styles.logo} />
+            <Text style={styles.title}>{paperTitle}</Text>
+            <Text style={styles.subHeader}>Paper Code: {paperCode}</Text>
+            <Text style={styles.subHeader}>Tier: {paperTier}</Text>
+            <Text style={styles.subHeader}>
+              Time: {paperTime} minutes | Total Marks: {paperMarks}
+            </Text>
+          </View>
+        </View>
         
-        {/* Questions Section - Extremely simple */}
+        {/* Instructions Section */}
+        <View style={styles.instructionsSection}>
+          <Text style={styles.sectionTitle}>INSTRUCTIONS TO CANDIDATES</Text>
+          {Array.isArray(data.paper?.instructions) && 
+            data.paper.instructions.map((instr, i) => (
+              <Text key={i} style={styles.instruction}>• {instr}</Text>
+            ))
+          }
+        </View>
+        
+        {/* Information Section */}
+        <View style={styles.instructionsSection}>
+          <Text style={styles.sectionTitle}>INFORMATION FOR CANDIDATES</Text>
+          {Array.isArray(data.paper?.information) && 
+            data.paper.information.map((info, i) => (
+              <Text key={i} style={styles.instruction}>• {info}</Text>
+            ))
+          }
+        </View>
+        
+        {/* Questions Heading */}
+        <View style={styles.instructionsSection}>
+          <Text style={styles.sectionTitle}>QUESTIONS</Text>
+        </View>
+        
+        {/* Footer with page numbers and logo */}
+        <View fixed style={styles.footer}>
+          <Image src={inkstallLogo} style={styles.footerLogo} />
+          <Text style={styles.footerText}>Page <Text render={({ pageNumber }) => `${pageNumber}`} /></Text>
+        </View>
+      </Page>
+
+      {/* Content pages with questions */}
+      <Page size="A4" style={styles.page} wrap>
+        {/* Questions Section - All questions in one continuous flow */}
         <View style={styles.questionSection}>
-          {pageIndex > 0 && (
-            <>
-              <Text style={{ fontSize: 10, marginBottom: 10, textAlign: 'center' }}>
-                {paperTitle} - Page {pageIndex + 1}
-              </Text>
-              <Text style={styles.questionsHeading}>QUESTIONS (continued)</Text>
-            </>
-          )}
-          
-          {pageQuestions.map((q, i) => {
-            const questionNumber = startIdx + i + 1;
+          {questions.map((q, i) => {
+            const questionNumber = i + 1;
             return (
-              <View key={i} style={styles.questionContainer}>
+              <View key={i} style={styles.questionContainer} wrap={false}>
                 <Text style={styles.question}>
                   {q.number || questionNumber}. {q.question || ""}
                 </Text>
@@ -274,24 +249,18 @@ const QuestionPaperPDF = ({ data }) => {
             );
           })}
           
-          {/* Best of Luck message on the last page */}
-          {pageIndex === totalPages - 1 && (
-            <Text style={styles.bestOfLuck}>Best of Luck!</Text>
-          )}
+          {/* Best of Luck message */}
+          <Text style={styles.bestOfLuck}>*******All The Best*******</Text>
         </View>
         
-        {/* Watermark at bottom of every page */}
-        <Watermark />
-        
-        {/* Footer with page numbers */}
-        <View style={styles.footer}>
-          <Text>Generated by Inkstall Bot | {new Date().toLocaleDateString()} | Page {pageIndex + 1} of {totalPages}</Text>
+        {/* Footer with page numbers and logo - fixed to appear on all pages */}
+        <View fixed style={styles.footer}>
+          <Image src={inkstallLogo} style={styles.footerLogo} />
+          <Text style={styles.footerText}>Page <Text render={({ pageNumber }) => `${pageNumber}`} /></Text>
         </View>
       </Page>
-    );
-  });
-  
-  return <Document>{pages}</Document>;
+    </Document>
+  );
 };
 
 // Answer key PDF component
@@ -308,71 +277,48 @@ const AnswerKeyPDF = ({ data }) => {
   }
   
   // Extract the paper info safely
-  const paperTitle = data.paper?.title || "IGCSE Question Paper";
+  const paperTitle = data.paper?.title || "IGCSE Answer Key";
   const paperCode = data.paper?.code || "";
   const paperTier = data.paper?.tier || "";
   
   // Get the questions array safely
   const questions = Array.isArray(data.questions) ? data.questions : [];
   
-  // Create a watermark component to reuse on each page
-  const Watermark = () => (
-    <View style={styles.watermark}>
-      <Image src={inkstallLogo} style={styles.watermarkImage} />
-    </View>
-  );
-  
-  // Calculate how many questions to show per page (roughly 8 per page for answer key)
-  const questionsPerPage = 8;
-  const totalPages = Math.ceil(questions.length / questionsPerPage);
-  
-  // Create an array of pages
-  const pages = Array.from({ length: totalPages }, (_, pageIndex) => {
-    const startIdx = pageIndex * questionsPerPage;
-    const endIdx = Math.min(startIdx + questionsPerPage, questions.length);
-    const pageQuestions = questions.slice(startIdx, endIdx);
-    
-    return (
-      <Page key={pageIndex} size="A4" style={styles.page}>
-        {/* Header only on first page */}
-        {pageIndex === 0 && (
-          <>
-            <View style={styles.header}>
-              <View style={styles.headerContent}>
-                <Image src={inkstallLogo} style={styles.logo} />
-                <Text style={styles.title}>{paperTitle} - ANSWER KEY</Text>
-                <Text style={styles.subHeader}>Paper Code: {paperCode}</Text>
-                <Text style={styles.subHeader}>Tier: {paperTier}</Text>
-              </View>
-            </View>
-            
-            {/* Answer Key Heading */}
-            <View style={styles.instructionsSection}>
-              <Text style={styles.sectionTitle}>ANSWER KEY</Text>
-            </View>
-          </>
-        )}
+  // Create a document with dynamic pages for answer key
+  return (
+    <Document>
+      {/* First page with header */}
+      <Page size="A4" style={styles.page}>
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.headerContent}>
+            <Image src={inkstallLogo} style={styles.logo} />
+            <Text style={styles.title}>{paperTitle} - ANSWER KEY</Text>
+            <Text style={styles.subHeader}>Paper Code: {paperCode}</Text>
+            <Text style={styles.subHeader}>Tier: {paperTier}</Text>
+          </View>
+        </View>
         
-        {/* Answer Key Section */}
+        {/* Footer with logo - fixed to appear on all pages */}
+        <View fixed style={styles.footer}>
+          <Image src={inkstallLogo} style={styles.footerLogo} />
+          <Text style={styles.footerText}>Page <Text render={({ pageNumber }) => `${pageNumber}`} /></Text>
+        </View>
+      </Page>
+
+      {/* Content page with answers */}
+      <Page size="A4" style={styles.page} wrap>
+        {/* Questions Section */}
         <View style={styles.questionSection}>
-          {pageIndex > 0 && (
-            <>
-              <Text style={{ fontSize: 10, marginBottom: 10, textAlign: 'center' }}>
-                {paperTitle} - Answer Key - Page {pageIndex + 1}
-              </Text>
-              <Text style={styles.questionsHeading}>ANSWER KEY (continued)</Text>
-            </>
-          )}
-          
-          {pageQuestions.map((q, i) => {
-            const questionNumber = startIdx + i + 1;
+          {questions.map((q, i) => {
+            const questionNumber = i + 1;
             return (
-              <View key={i} style={styles.questionContainer}>
+              <View key={i} style={styles.questionContainer} wrap={false}>
                 <Text style={styles.question}>
                   {q.number || questionNumber}. {q.question || ""}
                 </Text>
                 
-                {/* Only render options for multiple-choice questions */}
+                {/* Only render options for multiple-choice questions - display options first */}
                 {q.options && (q.options.A || q.options.B || q.options.C || q.options.D) && (
                   <View style={styles.options}>
                     {q.options.A && <Text style={styles.option}>A. {q.options.A}</Text>}
@@ -382,34 +328,23 @@ const AnswerKeyPDF = ({ data }) => {
                   </View>
                 )}
                 
-                {/* Answer section */}
-                <View style={{ marginTop: 5, marginLeft: 20 }}>
-                  <Text style={{ ...styles.question, fontWeight: 'bold' }}>
-                    Answer: {q.answer || "Not provided"}
-                  </Text>
-                </View>
+                {/* Display answer after options */}
+                <Text style={[styles.question, { fontWeight: 'bold', marginTop: 5 }]}>
+                  Answer: {q.answer || ""}
+                </Text>
               </View>
             );
           })}
-          
-          {/* Best of Luck message on the last page */}
-          {pageIndex === totalPages - 1 && (
-            <Text style={styles.bestOfLuck}>Best of Luck!</Text>
-          )}
         </View>
         
-        {/* Watermark at bottom of every page */}
-        <Watermark />
-        
-        {/* Footer with page numbers */}
-        <View style={styles.footer}>
-          <Text>Generated by Inkstall Bot | {new Date().toLocaleDateString()} | Page {pageIndex + 1} of {totalPages}</Text>
+        {/* Footer with logo - fixed to appear on all pages */}
+        <View fixed style={styles.footer}>
+          <Image src={inkstallLogo} style={styles.footerLogo} />
+          <Text style={styles.footerText}>Page <Text render={({ pageNumber }) => `${pageNumber}`} /></Text>
         </View>
       </Page>
-    );
-  });
-  
-  return <Document>{pages}</Document>;
+    </Document>
+  );
 };
 
 // Helper function to get the auth token from session storage

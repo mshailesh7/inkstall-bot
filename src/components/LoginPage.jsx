@@ -28,10 +28,14 @@ const Login = () => {
     setError('');
 
    try {
-      // Make API call to login endpoint
       const response = await axios.post('/api/auth/login', {
         email,
         password
+      }, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        withCredentials: true
       });
       
       // Log the full response to see its structure

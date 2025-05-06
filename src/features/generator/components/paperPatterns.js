@@ -220,7 +220,7 @@ Reply with **only** a valid UTF-8 JSON object; no markdown, no comments.
 ## RULES                                  ##
 ############################################
 • Questions must reflect official Cambridge A Level Physics style.
-• Only use the content from the textbook provided above to generate all questions. Do not use prior knowledge.
+• Only use the content from the textbook content provided above to generate all questions. Do not use prior knowledge.
 • Style must mimic official MCQs — real-world context, quantitative reasoning, experimental logic, concise phrasing.
 • Use data interpretation, equations, and diagrams when appropriate.
 • Ensure answer keys are accurate and placed in \`"answer"\`.
