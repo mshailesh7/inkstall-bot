@@ -23,12 +23,12 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/RegistrationPage" element={<RegistrationPage />} />
         <Route path="/forgot" element={<ForgetPasswordPage />} />
-        {/* <Route path="/enrollment" element={
+        <Route path="/enrollment" element={
           <PrivateRoute>
             <EnrollmentPage />
           </PrivateRoute>
-        } /> */}
-        <Route path="/enrollment" element={<EnrollmentPage />} />        
+        } />
+        {/* <Route path="/enrollment" element={<EnrollmentPage />} />         */}
         {/* Protected routes */}
         <Route
           path="/"

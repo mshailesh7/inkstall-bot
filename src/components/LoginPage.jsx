@@ -27,78 +27,78 @@ const Login = () => {
     setLoading(true);
     setError('');
 
-  //  try {
-  //     // Make API call to login endpoint
-  //     const response = await axios.post('/api/auth/login', {
-  //       email,
-  //       password
-  //     });
+   try {
+      // Make API call to login endpoint
+      const response = await axios.post('/api/auth/login', {
+        email,
+        password
+      });
       
-  //     // Log the full response to see its structure
-  //     console.log('Full API Response:', response.data);
+      // Log the full response to see its structure
+      console.log('Full API Response:', response.data);
       
-  //     // Extract JWT token from response - handle different possible structures
-  //     let token = null;
+      // Extract JWT token from response - handle different possible structures
+      let token = null;
       
-  //     if (response.data.token) {
-  //       // The token might be prefixed with "Bearer "
-  //       token = response.data.token.startsWith('Bearer ') 
-  //         ? response.data.token.substring(7) // Remove "Bearer " prefix
-  //         : response.data.token;
-  //     } else if (response.data.accessToken) {
-  //       token = response.data.accessToken;
-  //     } else if (response.data.jwt) {
-  //       token = response.data.jwt;
-  //     } else if (typeof response.data === 'string') {
-  //       // Some APIs might return the token directly as a string
-  //       token = response.data;
-  //     }
+      if (response.data.token) {
+        // The token might be prefixed with "Bearer "
+        token = response.data.token.startsWith('Bearer ') 
+          ? response.data.token.substring(7) // Remove "Bearer " prefix
+          : response.data.token;
+      } else if (response.data.accessToken) {
+        token = response.data.accessToken;
+      } else if (response.data.jwt) {
+        token = response.data.jwt;
+      } else if (typeof response.data === 'string') {
+        // Some APIs might return the token directly as a string
+        token = response.data;
+      }
       
-  //     // Check enrollment status directly from response
-  //     const isEnrolled = response.data.isEnrolled;
-  //     console.log('Enrollment status:', isEnrolled);
+      // Check enrollment status directly from response
+      const isEnrolled = response.data.isEnrolled;
+      console.log('Enrollment status:', isEnrolled);
       
-  //     if (token) {
-  //       // Calculate expiration time (7 days from now)
-  //       const expirationTime = new Date();
-  //       expirationTime.setDate(expirationTime.getDate() + 7); // Add 7 days
+      if (token) {
+        // Calculate expiration time (7 days from now)
+        const expirationTime = new Date();
+        expirationTime.setDate(expirationTime.getDate() + 7); // Add 7 days
         
-  //       // Create token object with expiration
-  //       const tokenData = {
-  //         value: token,
-  //         expiry: expirationTime.getTime() // Store as timestamp
-  //       };
+        // Create token object with expiration
+        const tokenData = {
+          value: token,
+          expiry: expirationTime.getTime() // Store as timestamp
+        };
         
-  //       // Store token with expiration in session storage
-  //       sessionStorage.setItem('token', JSON.stringify(tokenData));
+        // Store token with expiration in session storage
+        sessionStorage.setItem('token', JSON.stringify(tokenData));
         
-  //       // Store user data
-  //       if (response.data.user) {
-  //         sessionStorage.setItem('user', JSON.stringify(response.data.user));
-  //       }
-        // localStorage.setItem('showWelcome', 'true');
-  //       // Store enrollment status in session storage for easy access
-  //       sessionStorage.setItem('isEnrolled', JSON.stringify(isEnrolled));
+        // Store user data
+        if (response.data.user) {
+          sessionStorage.setItem('user', JSON.stringify(response.data.user));
+        }
+        localStorage.setItem('showWelcome', 'true');
+        // Store enrollment status in session storage for easy access
+        sessionStorage.setItem('isEnrolled', JSON.stringify(isEnrolled));
         
-  //       // Redirect based on enrollment status
-  //       if (isEnrolled === false) {
-  //         // User is not enrolled, redirect to enrollment page
-  //         console.log('Redirecting to enrollment page...');
-  //         navigate('/enrollment');
-  //       } else {
+        // Redirect based on enrollment status
+        if (isEnrolled === false) {
+          // User is not enrolled, redirect to enrollment page
+          console.log('Redirecting to enrollment page...');
+          navigate('/enrollment');
+        } else {
           
-  //         // User is enrolled, redirect to dashboard
-  //         console.log('Redirecting to dashboard...');
-  //         navigate('/');
-  //       }
-  //     } else {
-  //       console.error('No token found in response:', response.data);
-  //       setError('Login successful but no authentication token received. Please contact support.');
-  //     }
+          // User is enrolled, redirect to dashboard
+          console.log('Redirecting to dashboard...');
+          navigate('/');
+        }
+      } else {
+        console.error('No token found in response:', response.data);
+        setError('Login successful but no authentication token received. Please contact support.');
+      }
       
-  //   } catch (err) {
-  //     console.error('Login error:', err);
-  //   }
+    } catch (err) {
+      console.error('Login error:', err);
+    }
   };
 
   return (

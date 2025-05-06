@@ -19,7 +19,11 @@ import {
     InputLabel,
     Select,
     MenuItem,
-    LinearProgress
+    LinearProgress,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions
 } from '@mui/material';
 
 // Icons
@@ -29,19 +33,12 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 
-import GeneratorSetupForm from './components/GeneratorSetupForm';
-import PdfUploadForm from './components/PdfUploaderForm';
+import PaperGenerationForm from './components/PaperGenerationForm';
 import { PDFDownloadLink, Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
 import inkstallLogo from '../../assets/inkstall.png';
 import axios from 'axios';
 
-const subjects = [
-  { id: 1, name: 'Physics', code: '0625' },
-  { id: 2, name: 'Chemistry', code: '0620' },
-  { id: 3, name: 'Biology', code: '0610' },
-];
-
-const steps = ['Upload PDF', 'Configure', 'Edit Questions', 'Finalize Paper'];
+const steps = ['Configure & Upload', 'Edit Questions', 'Finalize Paper'];
 
 // PDF Styles
 const styles = StyleSheet.create({
@@ -123,84 +120,296 @@ const styles = StyleSheet.create({
     fontSize: 8,
     fontFamily: 'Helvetica',
     fontStyle: 'italic'
+  },
+  instructionsSection: {
+    marginTop: 20
+  },
+  instruction: {
+    fontSize: 10,
+    marginBottom: 5,
+    fontFamily: 'Helvetica'
+  },
+  watermark: {
+    position: 'absolute',
+    bottom: 200,
+    left: 200,
+    // right: 0,
+    opacity: 0.1,
+    zIndex: -1
+  },
+  watermarkImage: {
+    width: 400,
+    height: 200,
+    opacity: 0.1,
+    zIndex: -1
+  },
+  bestOfLuck: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginTop: 20,
+    fontFamily: 'Helvetica'
+  },
+  questionsHeading: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    fontFamily: 'Helvetica'
   }
 });
 
-// PDF Document component
+// Ultra basic PDF Document component - hardcoded for maximum stability
 const QuestionPaperPDF = ({ data }) => {
-  // Group questions by type
-  const mcqQuestions = data.questions.filter(q => q.type === 'MCQ');
-  const shortAnswerQuestions = data.questions.filter(q => q.type === 'Short Answer');
-  const structuredQuestions = data.questions.filter(q => q.type === 'Structured');
-  const essayQuestions = data.questions.filter(q => q.type === 'Essay');
+  // Make extra sure we have data
+  if (!data || !data.questions) {
+    return (
+      <Document>
+        <Page size="A4" style={styles.page}>
+          <Text>No valid data available</Text>
+        </Page>
+      </Document>
+    );
+  }
   
-  // Function to render a group of questions
-  const renderQuestionGroup = (questions, startIndex) => {
-    return questions.map((q, index) => (
-      <View key={index.toString()} style={styles.questionContainer}>
-        <Text style={styles.question}>
-          {startIndex + index + 1}. {q.question || q.text} [{q.marks} marks]
-        </Text>
-        {q.type === 'MCQ' && q.options && (
-          <View style={styles.options}>
-            {q.options.map((option, optIndex) => (
-              <Text key={optIndex.toString()} style={styles.option}>
-                {String.fromCharCode(97 + optIndex)}. {option}
-              </Text>
-            ))}
-          </View>
+  // Extract the paper info safely
+  const paperTitle = data.paper?.title || "IGCSE Question Paper";
+  const paperCode = data.paper?.code || "";
+  const paperTier = data.paper?.tier || "";
+  const paperTime = data.paper?.duration_minutes || 45;
+  const paperMarks = data.paper?.total_marks || 40;
+  
+  // Get the questions array safely
+  const questions = Array.isArray(data.questions) ? data.questions : [];
+  
+  // Create a watermark component to reuse on each page
+  const Watermark = () => (
+    <View style={styles.watermark}>
+      <Image src={inkstallLogo} style={styles.watermarkImage} />
+    </View>
+  );
+  
+  // Calculate how many questions to show per page (roughly 10 per page)
+  const questionsPerPage = 10;
+  const totalPages = Math.ceil(questions.length / questionsPerPage);
+  
+  // Create an array of pages
+  const pages = Array.from({ length: totalPages }, (_, pageIndex) => {
+    const startIdx = pageIndex * questionsPerPage;
+    const endIdx = Math.min(startIdx + questionsPerPage, questions.length);
+    const pageQuestions = questions.slice(startIdx, endIdx);
+    
+    return (
+      <Page key={pageIndex} size="A4" style={styles.page}>
+        {/* Header only on first page */}
+        {pageIndex === 0 && (
+          <>
+            <View style={styles.header}>
+              <View style={styles.headerContent}>
+                <Image src={inkstallLogo} style={styles.logo} />
+                <Text style={styles.title}>{paperTitle}</Text>
+                <Text style={styles.subHeader}>Paper Code: {paperCode}</Text>
+                <Text style={styles.subHeader}>Tier: {paperTier}</Text>
+                <Text style={styles.subHeader}>
+                  Time: {paperTime} minutes | Total Marks: {paperMarks}
+                </Text>
+              </View>
+            </View>
+            
+            {/* Instructions Section */}
+            <View style={styles.instructionsSection}>
+              <Text style={styles.sectionTitle}>INSTRUCTIONS TO CANDIDATES</Text>
+              {Array.isArray(data.paper?.instructions) && 
+                data.paper.instructions.map((instr, i) => (
+                  <Text key={i} style={styles.instruction}>• {instr}</Text>
+                ))
+              }
+            </View>
+            
+            {/* Information Section */}
+            <View style={styles.instructionsSection}>
+              <Text style={styles.sectionTitle}>INFORMATION FOR CANDIDATES</Text>
+              {Array.isArray(data.paper?.information) && 
+                data.paper.information.map((info, i) => (
+                  <Text key={i} style={styles.instruction}>• {info}</Text>
+                ))
+              }
+            </View>
+            
+            {/* Questions Heading */}
+            <View style={styles.instructionsSection}>
+              <Text style={styles.sectionTitle}>QUESTIONS</Text>
+            </View>
+          </>
         )}
-      </View>
-    ));
-  };
-  
-  return (
-    <Document>
-      <Page size="A4" style={styles.page}>
-        <View style={styles.header}>
-          <View style={styles.headerContent}>
-            <Image style={styles.logo} src={inkstallLogo} />
-            <Text style={styles.title}>{data.paperTitle || "Question Paper"}</Text>
-            <Text style={styles.subHeader}>Subject: {data.subject}</Text>
-            <Text style={styles.subHeader}>Total Marks: {data.totalMarks}</Text>
-            {data.timeLimit && (
-              <Text style={styles.subHeader}>Duration: {data.timeLimit} minutes</Text>
-            )}
-          </View>
+        
+        {/* Questions Section - Extremely simple */}
+        <View style={styles.questionSection}>
+          {pageIndex > 0 && (
+            <>
+              <Text style={{ fontSize: 10, marginBottom: 10, textAlign: 'center' }}>
+                {paperTitle} - Page {pageIndex + 1}
+              </Text>
+              <Text style={styles.questionsHeading}>QUESTIONS (continued)</Text>
+            </>
+          )}
+          
+          {pageQuestions.map((q, i) => {
+            const questionNumber = startIdx + i + 1;
+            return (
+              <View key={i} style={styles.questionContainer}>
+                <Text style={styles.question}>
+                  {q.number || questionNumber}. {q.question || ""}
+                </Text>
+                
+                {/* Only render options for multiple-choice questions */}
+                {q.options && (q.options.A || q.options.B || q.options.C || q.options.D) && (
+                  <View style={styles.options}>
+                    {q.options.A && <Text style={styles.option}>A. {q.options.A}</Text>}
+                    {q.options.B && <Text style={styles.option}>B. {q.options.B}</Text>}
+                    {q.options.C && <Text style={styles.option}>C. {q.options.C}</Text>}
+                    {q.options.D && <Text style={styles.option}>D. {q.options.D}</Text>}
+                  </View>
+                )}
+              </View>
+            );
+          })}
+          
+          {/* Best of Luck message on the last page */}
+          {pageIndex === totalPages - 1 && (
+            <Text style={styles.bestOfLuck}>Best of Luck!</Text>
+          )}
         </View>
         
-        <View style={styles.questionSection}>
-          {mcqQuestions.length > 0 && (
-            <>
-              <Text style={styles.sectionTitle}>Section A: Multiple Choice Questions</Text>
-              {renderQuestionGroup(mcqQuestions, 0)}
-            </>
-          )}
-          
-          {shortAnswerQuestions.length > 0 && (
-            <>
-              <Text style={styles.sectionTitle}>Section B: Short Answer Questions</Text>
-              {renderQuestionGroup(shortAnswerQuestions, mcqQuestions.length)}
-            </>
-          )}
-          
-          {structuredQuestions.length > 0 && (
-            <>
-              <Text style={styles.sectionTitle}>Section C: Structured Questions</Text>
-              {renderQuestionGroup(structuredQuestions, mcqQuestions.length + shortAnswerQuestions.length)}
-            </>
-          )}
-          
-          {essayQuestions.length > 0 && (
-            <>
-              <Text style={styles.sectionTitle}>Section D: Essay Questions</Text>
-              {renderQuestionGroup(essayQuestions, mcqQuestions.length + shortAnswerQuestions.length + structuredQuestions.length)}
-            </>
-          )}
+        {/* Watermark at bottom of every page */}
+        <Watermark />
+        
+        {/* Footer with page numbers */}
+        <View style={styles.footer}>
+          <Text>Generated by Inkstall Bot | {new Date().toLocaleDateString()} | Page {pageIndex + 1} of {totalPages}</Text>
         </View>
       </Page>
-    </Document>
+    );
+  });
+  
+  return <Document>{pages}</Document>;
+};
+
+// Answer key PDF component
+const AnswerKeyPDF = ({ data }) => {
+  // Make extra sure we have data
+  if (!data || !data.questions) {
+    return (
+      <Document>
+        <Page size="A4" style={styles.page}>
+          <Text>No valid data available</Text>
+        </Page>
+      </Document>
+    );
+  }
+  
+  // Extract the paper info safely
+  const paperTitle = data.paper?.title || "IGCSE Question Paper";
+  const paperCode = data.paper?.code || "";
+  const paperTier = data.paper?.tier || "";
+  
+  // Get the questions array safely
+  const questions = Array.isArray(data.questions) ? data.questions : [];
+  
+  // Create a watermark component to reuse on each page
+  const Watermark = () => (
+    <View style={styles.watermark}>
+      <Image src={inkstallLogo} style={styles.watermarkImage} />
+    </View>
   );
+  
+  // Calculate how many questions to show per page (roughly 8 per page for answer key)
+  const questionsPerPage = 8;
+  const totalPages = Math.ceil(questions.length / questionsPerPage);
+  
+  // Create an array of pages
+  const pages = Array.from({ length: totalPages }, (_, pageIndex) => {
+    const startIdx = pageIndex * questionsPerPage;
+    const endIdx = Math.min(startIdx + questionsPerPage, questions.length);
+    const pageQuestions = questions.slice(startIdx, endIdx);
+    
+    return (
+      <Page key={pageIndex} size="A4" style={styles.page}>
+        {/* Header only on first page */}
+        {pageIndex === 0 && (
+          <>
+            <View style={styles.header}>
+              <View style={styles.headerContent}>
+                <Image src={inkstallLogo} style={styles.logo} />
+                <Text style={styles.title}>{paperTitle} - ANSWER KEY</Text>
+                <Text style={styles.subHeader}>Paper Code: {paperCode}</Text>
+                <Text style={styles.subHeader}>Tier: {paperTier}</Text>
+              </View>
+            </View>
+            
+            {/* Answer Key Heading */}
+            <View style={styles.instructionsSection}>
+              <Text style={styles.sectionTitle}>ANSWER KEY</Text>
+            </View>
+          </>
+        )}
+        
+        {/* Answer Key Section */}
+        <View style={styles.questionSection}>
+          {pageIndex > 0 && (
+            <>
+              <Text style={{ fontSize: 10, marginBottom: 10, textAlign: 'center' }}>
+                {paperTitle} - Answer Key - Page {pageIndex + 1}
+              </Text>
+              <Text style={styles.questionsHeading}>ANSWER KEY (continued)</Text>
+            </>
+          )}
+          
+          {pageQuestions.map((q, i) => {
+            const questionNumber = startIdx + i + 1;
+            return (
+              <View key={i} style={styles.questionContainer}>
+                <Text style={styles.question}>
+                  {q.number || questionNumber}. {q.question || ""}
+                </Text>
+                
+                {/* Only render options for multiple-choice questions */}
+                {q.options && (q.options.A || q.options.B || q.options.C || q.options.D) && (
+                  <View style={styles.options}>
+                    {q.options.A && <Text style={styles.option}>A. {q.options.A}</Text>}
+                    {q.options.B && <Text style={styles.option}>B. {q.options.B}</Text>}
+                    {q.options.C && <Text style={styles.option}>C. {q.options.C}</Text>}
+                    {q.options.D && <Text style={styles.option}>D. {q.options.D}</Text>}
+                  </View>
+                )}
+                
+                {/* Answer section */}
+                <View style={{ marginTop: 5, marginLeft: 20 }}>
+                  <Text style={{ ...styles.question, fontWeight: 'bold' }}>
+                    Answer: {q.answer || "Not provided"}
+                  </Text>
+                </View>
+              </View>
+            );
+          })}
+          
+          {/* Best of Luck message on the last page */}
+          {pageIndex === totalPages - 1 && (
+            <Text style={styles.bestOfLuck}>Best of Luck!</Text>
+          )}
+        </View>
+        
+        {/* Watermark at bottom of every page */}
+        <Watermark />
+        
+        {/* Footer with page numbers */}
+        <View style={styles.footer}>
+          <Text>Generated by Inkstall Bot | {new Date().toLocaleDateString()} | Page {pageIndex + 1} of {totalPages}</Text>
+        </View>
+      </Page>
+    );
+  });
+  
+  return <Document>{pages}</Document>;
 };
 
 // Helper function to get the auth token from session storage
@@ -214,6 +423,13 @@ const getAuthToken = () => {
         return parsedToken.value;
       }
     }
+    
+    // Also check for authToken format (from the login update)
+    const authToken = sessionStorage.getItem('authToken');
+    if (authToken) {
+      return authToken;
+    }
+    
     return ''; // Return empty string if no token or expired
   } catch (error) {
     console.error('Error retrieving auth token:', error);
@@ -223,850 +439,705 @@ const getAuthToken = () => {
 
 // Helper function to validate token format
 const isValidTokenFormat = (token) => {
-  // Check if token exists and is not empty
-  if (!token || token.trim() === '') {
-    console.error('Token is empty or undefined');
+  if (!token) return false;
+  
+  // Check if it's a JWT token (simple format check)
+  // JWT tokens typically have 3 parts separated by dots
+  const parts = token.split('.');
+  if (parts.length !== 3) return false;
+  
+  // Check if each part is base64 encoded
+  try {
+    for (const part of parts) {
+      // Add padding if needed
+      const paddedPart = part.padEnd(Math.ceil(part.length / 4) * 4, '=');
+      // Try to decode
+      atob(paddedPart.replace(/-/g, '+').replace(/_/g, '/'));
+    }
+    return true;
+  } catch (e) {
     return false;
   }
-  
-  // Basic format validation - tokens are typically non-trivial strings
-  // You might want to add more specific validation based on your token format
-  if (token.length < 10) {
-    console.error('Token is too short, likely invalid');
-    return false;
-  }
-  
-  // Log token format for debugging (first few characters only for security)
-  console.log('Token format check: ', token.substring(0, 5) + '...' + token.substring(token.length - 5));
-  
-  return true;
 };
 
 const PaperGeneratorPage = () => {
+  // State for stepper
   const [activeStep, setActiveStep] = useState(0);
-  const [paperConfig, setPaperConfig] = useState(null);
-  const [questions, setQuestions] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [generationError, setGenerationError] = useState(null);
-  const [generatedQuestions, setGeneratedQuestions] = useState([]);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [currentQuestion, setCurrentQuestion] = useState({
-    id: 0,
-    text: '',
-    modelAnswer: '',
-    type: 'MCQ',
-    marks: 2,
-    options: ['', '', '', ''],
-    correctAnswer: '',
-    diagram: false
-  });
   
-  // PDF preview data
+  // State for loading
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  
+  // State for uploaded file and extracted text
+  const [uploadedFile, setUploadedFile] = useState(null);
+  const [extractedText, setExtractedText] = useState('');
+  
+  // State for generated questions
+  const [generatedQuestions, setGeneratedQuestions] = useState([]);
+  const [editingQuestion, setEditingQuestion] = useState(null);
+  const [editFormData, setEditFormData] = useState({
+    question: '',
+    answer: '',
+    options: { A: '', B: '', C: '', D: '' },
+    marks: ''
+  });
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  
+  // State for final PDF data
   const [pdfData, setPdfData] = useState({
-    paperTitle: 'Question Paper',
-    subject: 'General',
+    paperTitle: '',
+    subject: '',
     totalMarks: 0,
     timeLimit: 60,
     questions: []
   });
   
-  // New state for PDF upload
-  const [extractedText, setExtractedText] = useState('');
-  const [pageRange, setPageRange] = useState('');
-
-  const [generationProgress, setGenerationProgress] = useState(0); // Add progress state for question generation
-
+  // Handle file upload
+  const handleFileUpload = (file) => {
+    setUploadedFile(file);
+    console.log('File uploaded:', file.name);
+    // You could extract text here if needed
+  };
+  
+  // Handle next step
   const handleNext = () => {
-    if (activeStep === steps.length - 1) {
-      console.log('Paper generation completed!');
-      return;
-    }
-    setActiveStep(prevActiveStep => prevActiveStep + 1);
+    setActiveStep((prevActiveStep) => prevActiveStep + 1);
   };
-
+  
+  // Handle back step
   const handleBack = () => {
-    setActiveStep(prevActiveStep => prevActiveStep - 1);
+    setActiveStep((prevActiveStep) => prevActiveStep - 1);
   };
   
-  // Handle PDF upload completion
-  const handlePdfUploadComplete = (text, range) => {
-    setExtractedText(text);
-    setPageRange(range);
-  };
-
-  const handleGenerateSubmit = async (formData, token) => {
-    // If formData is a FormData object (from the form), extract the config
-    // If it's already processed data (from the API response), use it directly
-    const isProcessedData = formData.questions !== undefined;
+  // Handle generation form submission
+  const handleGenerateSubmit = (responseData) => {
+    console.log('Generation response:', responseData);
     
-    if (isProcessedData) {
-      // This is already processed data from the API
-      const questionData = formData;
+    // Store the complete response data
+    if (responseData && responseData.questions && Array.isArray(responseData.questions)) {
+      // Extract just the questions array from the response
+      setGeneratedQuestions(responseData.questions);
       
-      // Extract paper configuration
-      const config = {
-        paperTitle: questionData.paperTitle || 'Untitled Paper',
-        subjectId: questionData.subject || '',
-        totalMarks: questionData.totalMarks || 100,
-        timeLimit: questionData.timeLimit || 60
-      };
-      
-      setPaperConfig(config);
-      
-      // Log the questions data for debugging
-      console.log('Questions data type:', typeof questionData.questions);
-      console.log('Questions data:', questionData.questions);
-      
-      // Ensure questions is an array before mapping
-      let questionsArray = [];
-      
-      // Handle different response formats
-      if (Array.isArray(questionData.questions)) {
-        questionsArray = questionData.questions;
-      } else if (typeof questionData.questions === 'object' && questionData.questions !== null) {
-        // If it's an object but not an array, it might be a single question or have a nested structure
-        if (questionData.questions.questions && Array.isArray(questionData.questions.questions)) {
-          questionsArray = questionData.questions.questions;
-        } else {
-          // Try to convert the object to an array if it has question-like properties
-          questionsArray = [questionData.questions];
-        }
-      } else if (typeof questionData.questions === 'string') {
-        // If it's a string, it might be a JSON string
-        try {
-          const parsed = JSON.parse(questionData.questions);
-          if (Array.isArray(parsed)) {
-            questionsArray = parsed;
-          } else if (parsed.questions && Array.isArray(parsed.questions)) {
-            questionsArray = parsed.questions;
-          } else {
-            questionsArray = [parsed];
-          }
-        } catch (e) {
-          console.error('Failed to parse questions string:', e);
-          setGenerationError('Invalid response format from the server');
-          return;
-        }
-      }
-      
-      // If we still don't have an array, create a default one
-      if (questionsArray.length === 0) {
-        console.error('Could not extract questions array from response');
-        setGenerationError('No questions were returned from the server');
-        return;
-      }
-      
-      // Transform questions to match the expected format
-      const formattedQuestions = questionsArray.map((q, index) => ({
-        id: index + 1,
-        text: q.question || q.text,
-        modelAnswer: q.answer || q.correctAnswer || q.modelAnswer || '',
-        type: q.type || 'Short Answer',
-        marks: q.marks || 2,
-        diagram: false,
-        options: q.options || []
-      }));
-      
-      // Sort questions by type: MCQs first, then Short Answer, then others
-      const sortedQuestions = [...formattedQuestions].sort((a, b) => {
-        // Define the order of question types
-        const typeOrder = {
-          'MCQ': 1,
-          'Short Answer': 2,
-          'Structured': 3,
-          'Essay': 4
-        };
-        
-        // Get the order value for each question type, defaulting to a high number for unknown types
-        const orderA = typeOrder[a.type] || 999;
-        const orderB = typeOrder[b.type] || 999;
-        
-        // Sort by type order
-        return orderA - orderB;
-      });
-      
-      // Reassign IDs based on the new order
-      const reindexedQuestions = sortedQuestions.map((q, index) => ({
-        ...q,
-        id: index + 1
-      }));
-      
-      // Store all generated questions
-      setGeneratedQuestions(reindexedQuestions);
-      
-      // Set up PDF data
+      // Also store the complete response for PDF generation
       setPdfData({
-        paperTitle: config.paperTitle,
-        subject: subjects.find(s => s.id.toString() === config.subjectId)?.name || 'General',
-        totalMarks: config.totalMarks,
-        timeLimit: config.timeLimit,
-        questions: [] // Start with empty questions array
+        paperTitle: responseData.paper?.title || 'Examination Paper',
+        subject: responseData.paper?.subject || '',
+        totalMarks: responseData.paper?.total_marks || responseData.questions.length,
+        timeLimit: responseData.paper?.duration_minutes || 60,
+        questions: responseData.questions,
+        paper: responseData.paper // Store the complete paper info
       });
-      
-      // Set the first question as current
-      if (reindexedQuestions.length > 0) {
-        setCurrentQuestion(reindexedQuestions[0]);
-        setCurrentQuestionIndex(0);
-      }
-      
-      setActiveStep(2); // Move to question editing step (now step 3)
     } else {
-      // This is a form submission from the configuration step
-      setLoading(true);
-      setGenerationError(null);
-      
-      try {
-        // Use the extracted text from PDF upload step to generate questions
-        const requestData = new FormData();
-        
-        // Convert the extracted text to a file and append it to the FormData
-        if (extractedText) {
-          // Create a Blob from the extracted text
-          const textBlob = new Blob([extractedText], { type: 'text/plain' });
-          
-          // Create a File object from the Blob
-          const textFile = new File([textBlob], 'extracted_text.txt', { type: 'text/plain' });
-          
-          // Append the file to the FormData
-          requestData.append('file', textFile);
-        } else {
-          console.error('No extracted text available');
-          setGenerationError('No text extracted from PDF. Please try uploading again.');
-          setLoading(false);
-          return;
-        }
-        
-        // Append other form data
-        requestData.append('subject', formData.get('subject'));
-        requestData.append('difficulty', formData.get('difficulty'));
-        requestData.append('questionTypes', formData.get('questionTypes'));
-        requestData.append('numQuestions', formData.get('numQuestions'));
-        requestData.append('totalMarks', formData.get('totalMarks') || 100);
-        requestData.append('paperTitle', formData.get('paperTitle') || `${subjects.find(s => s.id.toString() === formData.get('subject')).name} Exam`);
-        requestData.append('timeLimit', formData.get('timeLimit') || 60);
-        
-        // Debug logs for request data and token
-        console.log('Form data being sent to API:');
-        for (let [key, value] of requestData.entries()) {
-          console.log(`${key}: ${value instanceof File ? 'File: ' + value.name : value}`);
-        }
-        
-        // Validate token format
-        const tokenToUse = token || getAuthToken();
-        const isValidToken = isValidTokenFormat(tokenToUse);
-        console.log('Is token valid format:', isValidToken);
-        
-        if (!isValidToken) {
-          console.error('Invalid token format, authentication will likely fail');
-          // You might want to handle this case, e.g., redirect to login
-        }
-        
-        // Reset progress
-        setGenerationProgress(0);
-        
-        // Start progress simulation for question generation
-        const simulationTime = 30000; // 30 seconds simulation time
-        const progressInterval = setInterval(() => {
-          setGenerationProgress(prev => {
-            const newProgress = prev + 2; // Increase by 2% for a more gradual progress
-            if (newProgress >= 95) { // Only go up to 95% for simulation
-              clearInterval(progressInterval);
-              return 95;
-            }
-            return newProgress;
-          });
-        }, simulationTime / 50); // 50 steps to reach 95%
-        
-        // Send request to generate questions API - using the proxy configured in vite.config.js
-        const response = await axios.post('/api/questions/generate', requestData, {
-          headers: {
-            'Content-Type': 'multipart/form-data', // Change content type to multipart/form-data
-            'Authorization': `Bearer ${tokenToUse}` // Use validated token
-          },
-          // Increase timeout for long processing (60 minutes)
-          timeout: 60 * 60 * 1000,
-          // Set maximum content length to handle large responses
-          maxContentLength: 100 * 1024 * 1024,
-          maxBodyLength: 100 * 1024 * 1024
-        });
-        
-        // Clear the progress interval if it's still running
-        clearInterval(progressInterval);
-        
-        // Set progress to 100% when response is received
-        setGenerationProgress(100);
-        
-        // Add a small delay before processing the response to show 100% progress
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Process the response
-        const questionData = {
-          paperTitle: formData.get('paperTitle') || `${subjects.find(s => s.id.toString() === formData.get('subject')).name} Exam`,
-          subject: formData.get('subject'),
-          totalMarks: formData.get('totalMarks') || 100,
-          timeLimit: formData.get('timeLimit') || 60,
-          questions: response.data
-        };
-        
-        // Log the response data structure for debugging
-        console.log('API Response data:', response.data);
-        console.log('Question data structure:', questionData);
-        
-        // Call the existing handler with the processed data
-        handleGenerateSubmit(questionData, token);
-      } catch (error) {
-        console.error('Error generating questions:', error);
-        setGenerationError(error.response?.data?.message || 'Failed to generate questions. Please try again.');
-      } finally {
-        setLoading(false);
-      }
+      // If no valid questions array is found
+      setGeneratedQuestions([]);
+      setError('Invalid response format from server. Please try again.');
     }
-  };
-
-  const addQuestion = () => {
-    // Add current question to the PDF preview
-    const updatedQuestions = [...questions, currentQuestion];
-    setQuestions(updatedQuestions);
-
-    // Update PDF data with the new question
-    const updatedPdfData = {
-      ...pdfData,
-      questions: [...pdfData.questions, {...currentQuestion}],
-      totalMarks: pdfData.questions.reduce((sum, q) => sum + q.marks, 0) + currentQuestion.marks
-    };
-    setPdfData(updatedPdfData);
-
-    // Move to the next question from generated questions
-    const nextIndex = currentQuestionIndex + 1;
-    if (nextIndex < generatedQuestions.length) {
-      setCurrentQuestion(generatedQuestions[nextIndex]);
-      setCurrentQuestionIndex(nextIndex);
-    } else {
-      // If no more generated questions, prepare a new empty question
-      const newQuestion = {
-        id: pdfData.questions.length + 1,
-        text: '',
-        modelAnswer: '',
-        type: 'MCQ',
-        marks: 2,
-        options: ['', '', '', ''],
-        correctAnswer: '',
-        diagram: false
-      };
-      setCurrentQuestion(newQuestion);
-    }
-  };
-
-  const handleRegenerateQuestion = (id) => {
-    console.log(`Regenerating question with ID: ${id}`);
-  };
-
-  const handleDeleteQuestion = (id) => {
-    setQuestions(questions.filter(q => q.id !== id));
     
-    // Update PDF data
-    setPdfData({
-      ...pdfData,
-      questions: pdfData.questions.filter(q => q.id !== id)
-    });
+    setActiveStep(1);
   };
-
-  const handleQuestionEdit = (editedQuestion) => {
-    const updatedQuestions = questions.map(q => 
-      q.id === editedQuestion.id ? editedQuestion : q
+  
+  // Handle editing a specific question
+  const handleEditQuestion = (questionNumber) => {
+    const questionToEdit = generatedQuestions.find(q => 
+      q.number === questionNumber || 
+      q.number === String(questionNumber) || 
+      (typeof questionNumber === 'number' && q.number === undefined && questionNumber === index)
     );
-    setQuestions(updatedQuestions);
-
-    // Update PDF data with the edited question
-    const updatedPdfData = {
-      ...pdfData,
-      questions: updatedQuestions
-    };
-    setPdfData(updatedPdfData);
-
-    // Prepare the next question for editing
-    const nextQuestion = {
-      id: questions.length + 1,
-      text: '',
-      modelAnswer: '',
-      type: 'MCQ',
-      marks: 2,
-      options: ['', '', '', ''],
-      correctAnswer: '',
-      diagram: false
-    };
-    setCurrentQuestion(nextQuestion);
-  };
-
-  const handleAddQuestion = () => {
-    // Add the current question to the PDF preview
-    if (currentQuestion.text.trim() === '') {
-      alert("Please enter a question text");
-      return;
-    }
     
-    // Check if the question is already in the PDF
-    const existingIndex = pdfData.questions.findIndex(q => q.id === currentQuestion.id);
-    
-    if (existingIndex !== -1) {
-      // Update existing question
-      const updatedQuestions = [...pdfData.questions];
-      updatedQuestions[existingIndex] = {...currentQuestion};
+    if (questionToEdit) {
+      // Check if this is a multiple-choice question by checking if it has options
+      // or if the answer is a single letter (A, B, C, or D)
+      const hasOptions = 
+        (questionToEdit.hasOwnProperty('options') && 
+         questionToEdit.options && 
+         typeof questionToEdit.options === 'object') ||
+        (questionToEdit.answer && 
+         typeof questionToEdit.answer === 'string' && 
+         /^[A-D]$/.test(questionToEdit.answer.trim()));
       
-      setPdfData({
-        ...pdfData,
-        questions: updatedQuestions,
-        totalMarks: updatedQuestions.reduce((sum, q) => sum + q.marks, 0)
+      setEditingQuestion({
+        ...questionToEdit,
+        hasOptions
       });
-    } else {
-      // Add new question
-      setPdfData({
-        ...pdfData,
-        questions: [...pdfData.questions, {...currentQuestion}],
-        totalMarks: pdfData.questions.reduce((sum, q) => sum + q.marks, 0) + currentQuestion.marks
+      
+      setEditFormData({
+        question: questionToEdit.question || '',
+        answer: questionToEdit.answer || '',
+        options: questionToEdit.options || { A: '', B: '', C: '', D: '' },
+        marks: questionToEdit.marks || ''
       });
-    }
-    
-    // Clear the current question or prepare for the next one
-    const nextQuestionIndex = questions.findIndex(q => q.id === currentQuestion.id) + 1;
-    
-    if (nextQuestionIndex < questions.length) {
-      setCurrentQuestion(questions[nextQuestionIndex]);
-    } else {
-      // Create a new empty question
-      setCurrentQuestion({
-        id: pdfData.questions.length + 1,
-        text: '',
-        modelAnswer: '',
-        type: 'MCQ',
-        marks: 2,
-        options: ['', '', '', ''],
-        correctAnswer: '',
-        diagram: false
-      });
+      
+      setEditDialogOpen(true);
     }
   };
   
-  const handleEditQuestion = (id) => {
-    const questionToEdit = pdfData.questions.find(q => q.id === id);
-    if (questionToEdit) {
-      setCurrentQuestion(questionToEdit);
-    }
-  };
-
-  const handleQuestionChange = (field, value) => {
-    setCurrentQuestion(prev => ({
+  // Handle form field changes
+  const handleEditFormChange = (field, value) => {
+    setEditFormData(prev => ({
       ...prev,
       [field]: value
     }));
   };
   
-  const handleOptionChange = (index, value) => {
-    const newOptions = [...currentQuestion.options];
-    newOptions[index] = value;
-    
-    setCurrentQuestion(prev => ({
+  // Handle option change
+  const handleOptionChange = (option, value) => {
+    setEditFormData(prev => ({
       ...prev,
-      options: newOptions
+      options: {
+        ...prev.options,
+        [option]: value
+      }
     }));
   };
+  
+  // Handle saving edited question
+  const handleSaveEditedQuestion = () => {
+    if (editingQuestion) {
+      // Create the base updated question with common fields
+      const updatedQuestion = {
+        ...editingQuestion,
+        question: editFormData.question,
+        answer: editFormData.answer,
+        marks: editFormData.marks
+      };
 
-  // Responsive stepper component that shows only the current step on mobile
+      // If it's an MCQ, include the options
+      if (editingQuestion.hasOptions) {
+        updatedQuestion.options = editFormData.options;
+      } else {
+        // For structured questions, ensure no options property exists
+        delete updatedQuestion.options;
+      }
+      
+      // Update question in the questions array
+      setGeneratedQuestions(prevQuestions => 
+        prevQuestions.map(q => 
+          (q.number === editingQuestion.number || 
+           (typeof q.number === 'undefined' && typeof editingQuestion.number === 'undefined' && 
+            q.question === editingQuestion.question)) ? updatedQuestion : q
+        )
+      );
+      
+      // Update PDF data
+      setPdfData(prevData => ({
+        ...prevData,
+        questions: prevData.questions?.map(q => 
+          (q.number === editingQuestion.number || 
+           (typeof q.number === 'undefined' && typeof editingQuestion.number === 'undefined' && 
+            q.question === editingQuestion.question)) ? updatedQuestion : q
+        ) || []
+      }));
+      
+      // Close dialog and reset form
+      setEditDialogOpen(false);
+      setEditingQuestion(null);
+    }
+  };
+  
+  // Handle question deletion
+  const handleDeleteQuestion = (id) => {
+    setGeneratedQuestions(prevQuestions => 
+      prevQuestions.filter(q => q.id !== id)
+    );
+    
+    // Update PDF data
+    setPdfData(prevData => ({
+      ...prevData,
+      questions: prevData.questions.filter(q => q.id !== id)
+    }));
+  };
+  
+  // Responsive stepper component
   const ResponsiveStepper = () => {
     return (
-      <Stepper 
-        activeStep={activeStep} 
-        alternativeLabel
-        sx={{
-          mb: 4,
-          '@media (max-width: 600px)': {
-            '& .MuiStepLabel-labelContainer': {
-              display: { xs: 'none', sm: 'block' }
-            },
-            '& .MuiStepConnector-root': {
-              display: { xs: 'none', sm: 'block' }
-            },
-            '& .MuiStep-root': {
-              display: { xs: 'none', sm: 'flex' },
-              '&.Mui-active': {
-                display: 'flex'
-              }
-            }
-          }
-        }}
-      >
-        {steps.map((label) => (
-          <Step key={label}>
-            <StepLabel>{label}</StepLabel>
-          </Step>
-        ))}
-      </Stepper>
+      <Box sx={{ width: '100%', mb: 4 }}>
+        <Stepper 
+          activeStep={activeStep} 
+          alternativeLabel
+        >
+          {steps.map((label, index) => (
+            <Step key={label}>
+              <StepLabel 
+                sx={{
+                  '@media (max-width: 600px)': {
+                    display: activeStep === index ? 'block' : 'none'
+                  }
+                }}
+              >
+                {label}
+              </StepLabel>
+            </Step>
+          ))}
+        </Stepper>
+      </Box>
     );
   };
-
+  
   return (
-    <Box className="min-h-screen bg-gray-50 py-8 px-4">
-      <Box className="max-w-6xl mx-auto">
-        <Typography variant="h4" className="text-2xl font-bold mb-6 text-center">
-          Question Paper Generator
-        </Typography>
-        
-        <ResponsiveStepper />
-        
-        {/* Step 1: Upload PDF */}
-        {activeStep === 0 && (
-          <PdfUploadForm 
-            onUploadComplete={handlePdfUploadComplete}
-            handleNext={handleNext}
-          />
-        )}
-
-        {/* Step 2: Configure */}
-        {activeStep === 1 && (
-          <Box sx={{ width: '100%', p: 3 }}>
-            <Typography variant="h5" gutterBottom>
-              Configure Paper
-            </Typography>
-            
-            {/* Show progress bar during question generation */}
-            {loading && (
-              <Box sx={{ width: '100%', mb: 4 }}>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Generating questions... This may take a few minutes.
-                </Typography>
-                <LinearProgress 
-                  variant="determinate" 
-                  value={generationProgress} 
-                  sx={{ 
-                    height: 10, 
-                    borderRadius: 5,
-                    '& .MuiLinearProgress-bar': {
-                      backgroundColor: 'black',
-                    }
-                  }} 
-                />
-                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    {generationProgress}%
-                  </Typography>
-                </Box>
-              </Box>
-            )}
-            
-            <GeneratorSetupForm
-              onSubmit={handleGenerateSubmit}
-              isGenerating={loading}
-              handleNext={handleNext}
-              extractedText={extractedText}
-            />
-            
-            {generationError && (
-              <Alert severity="error" sx={{ mt: 2 }}>
-                {generationError}
-              </Alert>
-            )}
-          </Box>
-        )}
-
-        {/* Step 3: Edit Questions */}
-        {activeStep === 2 && (
-          <Grid container spacing={3}>
-            {/* Left Container: Question Editor */}
-            <Grid item xs={12} md={6}>
-              <Paper elevation={3} sx={{ p: 3, height: '100%' }}>
-                <Typography variant="h6" gutterBottom>
-                  Question Editor
-                </Typography>
-                
-                <Box sx={{ mt: 2 }}>
-                  <TextField
-                    fullWidth
-                    label="Question Text"
-                    multiline
-                    minRows={2}
-                    value={currentQuestion.text}
-                    onChange={(e) => handleQuestionChange('text', e.target.value)}
-                    sx={{ mb: 2 }}
-                  />
-                  
-                  <Grid container spacing={2} sx={{ mb: 2 }}>
-                    <Grid item xs={6}>
-                      <FormControl fullWidth>
-                        <InputLabel>Question Type</InputLabel>
-                        <Select
-                          value={currentQuestion.type}
-                          label="Question Type"
-                          onChange={(e) => handleQuestionChange('type', e.target.value)}
-                        >
-                          <MenuItem value="MCQ">Multiple Choice</MenuItem>
-                          <MenuItem value="Short Answer">Short Answer</MenuItem>
-                          <MenuItem value="Structured">Structured</MenuItem>
-                          <MenuItem value="Essay">Essay</MenuItem>
-                        </Select>
-                      </FormControl>
-                    </Grid>
-                    <Grid item xs={6}>
-                      <TextField
-                        fullWidth
-                        label="Marks"
-                        type="number"
-                        value={currentQuestion.marks}
-                        onChange={(e) => handleQuestionChange('marks', parseInt(e.target.value) || 0)}
-                        InputProps={{ inputProps: { min: 1 } }}
-                      />
-                    </Grid>
-                  </Grid>
-                  
-                  {currentQuestion.type === 'MCQ' && (
-                    <Box sx={{ mb: 2 }}>
-                      <Typography variant="subtitle2" gutterBottom>
-                        Options:
-                      </Typography>
-                      {currentQuestion.options.map((option, index) => (
-                        <TextField
-                          key={index}
-                          fullWidth
-                          label={`Option ${String.fromCharCode(97 + index)}`}
-                          value={option}
-                          onChange={(e) => handleOptionChange(index, e.target.value)}
-                          sx={{ mb: 1 }}
-                        />
-                      ))}
-                      <FormControl fullWidth sx={{ mt: 1 }}>
-                        <InputLabel>Correct Answer</InputLabel>
-                        <Select
-                          value={currentQuestion.correctAnswer}
-                          label="Correct Answer"
-                          onChange={(e) => handleQuestionChange('correctAnswer', e.target.value)}
-                        >
-                          {currentQuestion.options.map((option, index) => (
-                            <MenuItem key={index} value={option}>
-                              {String.fromCharCode(97 + index)}. {option}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                    </Box>
-                  )}
-                  
-                  <TextField
-                    fullWidth
-                    label="Model Answer"
-                    multiline
-                    minRows={3}
-                    value={currentQuestion.modelAnswer}
-                    onChange={(e) => handleQuestionChange('modelAnswer', e.target.value)}
-                    sx={{ mb: 2 }}
-                  />
-                  
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      onClick={addQuestion}
-                      startIcon={<AddIcon />}
-                    >
-                      {currentQuestionIndex < generatedQuestions.length - 1 ? 'Add Next Question' : 'Add Question'}
-                    </Button>
-                    
-                    <Button
-                      variant="outlined"
-                      onClick={() => {
-                        // Clear current question
-                        setCurrentQuestion({
-                          id: questions.length + 1,
-                          text: '',
-                          modelAnswer: '',
-                          type: 'MCQ',
-                          marks: 2,
-                          options: ['', '', '', ''],
-                          correctAnswer: '',
-                          diagram: false
-                        });
+    <Box className="container mx-auto px-4 py-8">
+      <Typography variant="h4" className="text-center mb-6 font-bold">
+        Question Paper Generator
+      </Typography>
+      
+      <ResponsiveStepper />
+      
+      {/* Step 1: Configure & Upload */}
+      {activeStep === 0 && (
+        <PaperGenerationForm
+          onSubmit={handleGenerateSubmit}
+          isGenerating={loading}
+          onFileUpload={handleFileUpload}
+        />
+      )}
+      
+      {/* Step 2: Edit Questions */}
+      {activeStep === 1 && (
+        <Grid container spacing={3}>
+          <Grid item xs={12}>
+            <Paper className="p-4">
+              <Typography variant="h6" className="mb-4">
+                Edit Generated Questions
+              </Typography>
+              
+              {error && (
+                <Alert severity="error" className="mb-4">
+                  {error}
+                </Alert>
+              )}
+              
+              <Box className="space-y-4">
+                {generatedQuestions.length === 0 ? (
+                  <Typography>No questions generated yet.</Typography>
+                ) : (
+                  generatedQuestions.map((q, index) => (
+                    <Box 
+                      key={q.number || `question-${index}`} 
+                      className="p-3 border rounded-md"
+                      sx={{ 
+                        borderColor: 'rgba(0, 0, 0, 0.12)',
+                        mb: 2
                       }}
                     >
-                      Clear
-                    </Button>
-                  </Box>
-                </Box>
-              </Paper>
-            </Grid>
-            
-            {/* Right Container: PDF Preview */}
-            <Grid item xs={12} md={6}>
-              <Paper elevation={3} sx={{ p: 3, height: '100%' }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                  <Typography variant="h6">
-                    Paper Preview
+                      <Box 
+                        sx={{ 
+                          display: 'flex', 
+                          justifyContent: 'space-between',
+                          alignItems: 'flex-start'
+                        }}
+                      >
+                        <Box sx={{ width: '90%' }}>
+                          <Typography variant="subtitle1" sx={{ fontWeight: 'medium' }}>
+                            {q.number || index + 1}. {q.question}
+                          </Typography>
+                          {q.answer && (
+                            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mt: 0.5 }}>
+                              Answer: {q.answer}
+                            </Typography>
+                          )}
+                        </Box>
+                        <Box>
+                          <IconButton 
+                            size="small" 
+                            color="primary"
+                            onClick={() => handleEditQuestion(q.number || index)}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </Box>
+                      </Box>
+                      
+                      {q.options && (
+                        <Box sx={{ ml: 3, mt: 1 }}>
+                          {q.options.A && (
+                            <Typography sx={{ mb: 0.5 }}>
+                              A. {q.options.A}
+                            </Typography>
+                          )}
+                          {q.options.B && (
+                            <Typography sx={{ mb: 0.5 }}>
+                              B. {q.options.B}
+                            </Typography>
+                          )}
+                          {q.options.C && (
+                            <Typography sx={{ mb: 0.5 }}>
+                              C. {q.options.C}
+                            </Typography>
+                          )}
+                          {q.options.D && (
+                            <Typography sx={{ mb: 0.5 }}>
+                              D. {q.options.D}
+                            </Typography>
+                          )}
+                        </Box>
+                      )}
+                    </Box>
+                  ))
+                )}
+              </Box>
+            </Paper>
+          </Grid>
+        </Grid>
+      )}
+      
+      {/* Step 3: Finalize Paper */}
+      {activeStep === 2 && (
+        <Box className="space-y-4">
+          <Card>
+            <CardHeader title="Final Paper Preview" />
+            <CardContent>
+              <Typography variant="h6" className="font-medium mb-4 text-sm">
+                {pdfData.paperTitle}
+              </Typography>
+              <Typography className="mb-2 text-sm">
+                Subject: {pdfData.subject}
+              </Typography>
+              <Typography className="mb-2 text-sm">
+                Number of Questions: {pdfData.questions.length}
+              </Typography>
+              <Typography className="mb-2 text-sm">
+                Total Marks: {pdfData.totalMarks}
+              </Typography>
+              
+              <Grid container spacing={3} sx={{ mt: 2 }}>
+                <Grid item xs={12} md={6}>
+                  <Typography variant="h6" className="font-medium mb-3 text-sm">
+                    Question Paper
                   </Typography>
-                  
-                  {pdfData.questions.length > 0 && (
+                  <Box 
+                    sx={{ 
+                      border: '1px solid #e0e0e0', 
+                      borderRadius: 1, 
+                      p: 2, 
+                      height: '400px', 
+                      overflow: 'auto',
+                      bgcolor: '#f9f9f9'
+                    }}
+                  >
+                    <Typography variant="body2" gutterBottom>
+                      Paper Title: {pdfData.paperTitle}
+                    </Typography>
+                    <Typography variant="body2" gutterBottom>
+                      Time Allowed: {pdfData.timeLimit} minutes
+                    </Typography>
+                    <Divider sx={{ my: 2 }} />
+                    
+                    {pdfData.questions.map((q, index) => (
+                      <Box key={index} sx={{ mb: 3 }}>
+                        <Typography variant="body1" fontWeight="bold">
+                          Question {q.number || index + 1} {q.marks ? `[${q.marks} marks]` : ''}
+                        </Typography>
+                        <Typography variant="body2" sx={{ mt: 1, whiteSpace: 'pre-line' }}>
+                          {q.question}
+                        </Typography>
+                        {q.options && (
+                          <Box sx={{ mt: 1 }}>
+                            {q.options.A && (
+                              <Typography variant="body2">A. {q.options.A}</Typography>
+                            )}
+                            {q.options.B && (
+                              <Typography variant="body2">B. {q.options.B}</Typography>
+                            )}
+                            {q.options.C && (
+                              <Typography variant="body2">C. {q.options.C}</Typography>
+                            )}
+                            {q.options.D && (
+                              <Typography variant="body2">D. {q.options.D}</Typography>
+                            )}
+                          </Box>
+                        )}
+                      </Box>
+                    ))}
+                  </Box>
+                  <Box sx={{ mt: 2 }}>
                     <PDFDownloadLink
                       document={<QuestionPaperPDF data={pdfData} />}
                       fileName={`${pdfData.paperTitle.replace(/\s+/g, '-').toLowerCase()}.pdf`}
                       style={{ textDecoration: 'none' }}
                     >
-                      {({ loading: pdfLoading }) => (
+                      {({ loading: pdfLoading, error }) => (
                         <Button
                           variant="contained"
                           color="primary"
-                          disabled={pdfLoading}
-                          size="small"
+                          disabled={pdfLoading || error}
+                          size="large"
+                          fullWidth
                         >
-                          {pdfLoading ? 'Preparing PDF...' : 'Download PDF'}
+                          {pdfLoading ? 'Preparing PDF...' : 'Download Question Paper'}
                         </Button>
                       )}
                     </PDFDownloadLink>
-                  )}
-                </Box>
+                  </Box>
+                </Grid>
                 
-                <Divider sx={{ mb: 2 }} />
-                
-                <Box sx={{ textAlign: 'center', mb: 3 }}>
-                  <Typography variant="h5">
-                    {pdfData.paperTitle}
+                <Grid item xs={12} md={6}>
+                  <Typography variant="h6" className="font-medium mb-3 text-sm">
+                    Answer Key
                   </Typography>
-                  <Typography variant="subtitle1">
-                    Subject: {pdfData.subject}
-                  </Typography>
-                  <Typography variant="subtitle2">
-                    Total Marks: {pdfData.totalMarks} | Time: {pdfData.timeLimit} minutes
-                  </Typography>
-                </Box>
-                
-                <Box sx={{ maxHeight: '500px', overflow: 'auto', p: 1 }}>
-                  {pdfData.questions.length === 0 ? (
-                    <Typography variant="body2" sx={{ textAlign: 'center', color: 'text.secondary', mt: 4 }}>
-                      No questions added yet. Use the editor on the left to add questions.
+                  <Box 
+                    sx={{ 
+                      border: '1px solid #e0e0e0', 
+                      borderRadius: 1, 
+                      p: 2, 
+                      height: '400px', 
+                      overflow: 'auto',
+                      bgcolor: '#f9f9f9'
+                    }}
+                  >
+                    <Typography variant="body2" gutterBottom>
+                      Paper Title: {pdfData.paperTitle} - Answer Key
                     </Typography>
-                  ) : (
-                    pdfData.questions.map((q, index) => (
-                      <Box key={q.id} sx={{ mb: 3, p: 2, border: '1px solid #e0e0e0', borderRadius: 1 }}>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                          <Typography sx={{ flex: 1 }}>
-                            <strong>{index + 1}. {q.text}</strong> [{q.marks} marks]
-                          </Typography>
-                          <Box>
-                            <IconButton 
-                              size="small" 
-                              onClick={() => handleEditQuestion(q.id)}
-                              sx={{ mr: 1 }}
-                            >
-                              <EditIcon fontSize="small" />
-                            </IconButton>
-                            <IconButton 
-                              size="small" 
-                              onClick={() => handleDeleteQuestion(q.id)}
-                            >
-                              <DeleteIcon fontSize="small" />
-                            </IconButton>
-                          </Box>
-                        </Box>
-                        
-                        {q.type === 'MCQ' && q.options && (
-                          <Box sx={{ ml: 3, mt: 1 }}>
-                            {q.options.map((option, optIndex) => (
-                              <Typography key={optIndex} sx={{ mb: 0.5 }}>
-                                {String.fromCharCode(97 + optIndex)}. {option}
+                    <Divider sx={{ my: 2 }} />
+                    
+                    {pdfData.questions.map((q, index) => (
+                      <Box key={index} sx={{ mb: 3 }}>
+                        <Typography variant="body1" fontWeight="bold">
+                          Question {q.number || index + 1} {q.marks ? `[${q.marks} marks]` : ''}
+                        </Typography>
+                        <Typography variant="body2" sx={{ mt: 1, whiteSpace: 'pre-line' }}>
+                          {q.question}
+                        </Typography>
+                        {q.options && (
+                          <Box sx={{ mt: 1 }}>
+                            {q.options.A && (
+                              <Typography variant="body2" sx={{ 
+                                fontWeight: q.answer === 'A' ? 'bold' : 'normal',
+                                color: q.answer === 'A' ? 'green' : 'inherit'
+                              }}>
+                                A. {q.options.A} {q.answer === 'A' && '✓'}
                               </Typography>
-                            ))}
+                            )}
+                            {q.options.B && (
+                              <Typography variant="body2" sx={{ 
+                                fontWeight: q.answer === 'B' ? 'bold' : 'normal',
+                                color: q.answer === 'B' ? 'green' : 'inherit'
+                              }}>
+                                B. {q.options.B} {q.answer === 'B' && '✓'}
+                              </Typography>
+                            )}
+                            {q.options.C && (
+                              <Typography variant="body2" sx={{ 
+                                fontWeight: q.answer === 'C' ? 'bold' : 'normal',
+                                color: q.answer === 'C' ? 'green' : 'inherit'
+                              }}>
+                                C. {q.options.C} {q.answer === 'C' && '✓'}
+                              </Typography>
+                            )}
+                            {q.options.D && (
+                              <Typography variant="body2" sx={{ 
+                                fontWeight: q.answer === 'D' ? 'bold' : 'normal',
+                                color: q.answer === 'D' ? 'green' : 'inherit'
+                              }}>
+                                D. {q.options.D} {q.answer === 'D' && '✓'}
+                              </Typography>
+                            )}
+                          </Box>
+                        )}
+                        {!q.options && (
+                          <Box sx={{ mt: 1 }}>
+                            <Typography variant="body2" fontWeight="bold">
+                              Answer:
+                            </Typography>
+                            <Typography variant="body2" sx={{ whiteSpace: 'pre-line', color: 'green' }}>
+                              {q.answer}
+                            </Typography>
                           </Box>
                         )}
                       </Box>
-                    ))
-                  )}
-                </Box>
-              </Paper>
-            </Grid>
-          </Grid>
-        )}
-
-        {activeStep === 3 && (
-          <Box className="space-y-4">
-            <Card>
-              <CardHeader title="Final Paper Preview" />
-              <CardContent>
-                <Typography variant="h6" className="font-medium mb-4 text-sm">
-                  {pdfData.paperTitle}
-                </Typography>
-                <Typography className="mb-2 text-sm">
-                  Subject: {pdfData.subject}
-                </Typography>
-                <Typography className="mb-2 text-sm">
-                  Number of Questions: {pdfData.questions.length}
-                </Typography>
-                <Typography className="mb-2 text-sm">
-                  Total Marks: {pdfData.totalMarks}
-                </Typography>
-                
-                <Box sx={{ mt: 4 }}>
-                  <PDFDownloadLink
-                    document={<QuestionPaperPDF data={pdfData} />}
-                    fileName={`${pdfData.paperTitle.replace(/\s+/g, '-').toLowerCase()}.pdf`}
-                    style={{ textDecoration: 'none' }}
-                  >
-                    {({ loading: pdfLoading }) => (
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        disabled={pdfLoading}
-                        size="large"
-                        fullWidth
-                      >
-                        {pdfLoading ? 'Preparing PDF...' : 'Download Final PDF'}
-                      </Button>
-                    )}
-                  </PDFDownloadLink>
-                </Box>
-              </CardContent>
-            </Card>
-          </Box>
-        )}
-
-        {/* Responsive Navigation Buttons */}
-        <Box className="flex flex-row justify-between items-center mt-6">
-          <Button 
-            variant="contained"
-            onClick={handleBack}
-            disabled={activeStep === 0 || loading}
-            sx={{
-              bgcolor: 'black',
-              color: 'white',
-              '&:hover': {
-                bgcolor: 'gray.800'
-              },
-              padding: '8px 16px',
-              fontSize: '0.9rem',
-              '@media (max-width: 640px)': {
-                padding: '6px 12px',
-                fontSize: '0.8rem'
-              }
-            }}
-          >
-            Back
-          </Button>
-          <Box sx={{ flex: '1 1 auto' }} />
-          <Button 
-            variant="contained"  
-            onClick={handleNext} 
-            sx={{
-              bgcolor: 'black',
-              color: 'white',
-              '&:hover': {
-                bgcolor: 'gray.800'
-              },
-              padding: '8px 16px',
-              fontSize: '0.9rem',
-              '@media (max-width: 640px)': {
-                padding: '6px 12px',
-                fontSize: '0.8rem'
-              }
-            }}
-          >
-            {activeStep === steps.length - 1 ? 'Finish' : 'Next'}
-          </Button>
+                    ))}
+                  </Box>
+                  <Box sx={{ mt: 2 }}>
+                    <PDFDownloadLink
+                      document={<AnswerKeyPDF data={pdfData} />}
+                      fileName={`${pdfData.paperTitle.replace(/\s+/g, '-').toLowerCase()}-answer-key.pdf`}
+                      style={{ textDecoration: 'none' }}
+                    >
+                      {({ loading: pdfLoading, error }) => (
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          disabled={pdfLoading || error}
+                          size="large"
+                          fullWidth
+                        >
+                          {pdfLoading ? 'Preparing Answer Key...' : 'Download Answer Key'}
+                        </Button>
+                      )}
+                    </PDFDownloadLink>
+                  </Box>
+                </Grid>
+              </Grid>
+            </CardContent>
+          </Card>
         </Box>
+      )}
+      
+      {/* Navigation Buttons */}
+      <Box className="flex flex-row justify-between items-center mt-6">
+        <Button 
+          variant="contained"
+          onClick={handleBack}
+          disabled={activeStep === 0 || loading}
+          sx={{
+            bgcolor: 'black',
+            color: 'white',
+            '&:hover': {
+              bgcolor: 'gray.800'
+            },
+            padding: '8px 16px',
+            fontSize: '0.9rem',
+            '@media (max-width: 640px)': {
+              padding: '6px 12px',
+              fontSize: '0.8rem'
+            }
+          }}
+        >
+          Back
+        </Button>
+        <Box sx={{ flex: '1 1 auto' }} />
+        <Button 
+          variant="contained"  
+          onClick={handleNext} 
+          disabled={activeStep === steps.length - 1}
+          sx={{
+            bgcolor: 'black',
+            color: 'white',
+            '&:hover': {
+              bgcolor: 'gray.800'
+            },
+            padding: '8px 16px',
+            fontSize: '0.9rem',
+            '@media (max-width: 640px)': {
+              padding: '6px 12px',
+              fontSize: '0.8rem'
+            }
+          }}
+        >
+          {activeStep === steps.length - 1 ? 'Finish' : 'Next'}
+        </Button>
       </Box>
+      
+      {/* Edit Question Dialog */}
+      <Dialog
+        open={editDialogOpen}
+        onClose={() => setEditDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          Edit Question {editingQuestion?.number ? `#${editingQuestion.number}` : ''}
+          {editingQuestion?.hasOptions ? ' (Multiple Choice)' : ' (Structured)'}
+        </DialogTitle>
+        <DialogContent>
+          {editingQuestion?.hasOptions ? (
+            // Multiple choice question with options
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, py: 1 }}>
+              <TextField
+                label="Question"
+                value={editFormData.question}
+                onChange={(e) => handleEditFormChange('question', e.target.value)}
+                variant="outlined"
+                fullWidth
+                multiline
+                rows={3}
+              />
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                <TextField
+                  label="Answer (A, B, C, or D)"
+                  value={editFormData.answer}
+                  onChange={(e) => handleEditFormChange('answer', e.target.value)}
+                  variant="outlined"
+                  fullWidth
+                />
+                <TextField
+                  label="Marks"
+                  value={editFormData.marks || '1'}
+                  onChange={(e) => handleEditFormChange('marks', e.target.value)}
+                  variant="outlined"
+                  type="number"
+                  inputProps={{ min: 1 }}
+                  sx={{ width: '100px' }}
+                />
+              </Box>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <Typography variant="body2" fontWeight="medium">Options:</Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  <TextField
+                    label="A"
+                    value={editFormData.options.A}
+                    onChange={(e) => handleOptionChange('A', e.target.value)}
+                    variant="outlined"
+                    fullWidth
+                  />
+                  <TextField
+                    label="B"
+                    value={editFormData.options.B}
+                    onChange={(e) => handleOptionChange('B', e.target.value)}
+                    variant="outlined"
+                    fullWidth
+                  />
+                  <TextField
+                    label="C"
+                    value={editFormData.options.C}
+                    onChange={(e) => handleOptionChange('C', e.target.value)}
+                    variant="outlined"
+                    fullWidth
+                  />
+                  <TextField
+                    label="D"
+                    value={editFormData.options.D}
+                    onChange={(e) => handleOptionChange('D', e.target.value)}
+                    variant="outlined"
+                    fullWidth
+                  />
+                </Box>
+              </Box>
+            </Box>
+          ) : (
+            // Structured question without options - use larger text areas
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, py: 1 }}>
+              <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="body2" fontWeight="medium" sx={{ mb: 1 }}>Question:</Typography>
+                  <TextField
+                    value={editFormData.question}
+                    onChange={(e) => handleEditFormChange('question', e.target.value)}
+                    variant="outlined"
+                    fullWidth
+                    multiline
+                    rows={6}
+                    placeholder="Enter the full question text here..."
+                  />
+                </Box>
+                <TextField
+                  label="Marks"
+                  value={editFormData.marks || ''}
+                  onChange={(e) => handleEditFormChange('marks', e.target.value)}
+                  variant="outlined"
+                  type="number"
+                  inputProps={{ min: 1 }}
+                  sx={{ width: '100px', mt: 4 }}
+                />
+              </Box>
+              <Box>
+                <Typography variant="body2" fontWeight="medium" sx={{ mb: 1 }}>Answer:</Typography>
+                <TextField
+                  value={editFormData.answer}
+                  onChange={(e) => handleEditFormChange('answer', e.target.value)}
+                  variant="outlined"
+                  fullWidth
+                  multiline
+                  rows={8}
+                  placeholder="Enter the model answer here..."
+                />
+              </Box>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
+          <Button onClick={handleSaveEditedQuestion} variant="contained" color="primary">Save</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
