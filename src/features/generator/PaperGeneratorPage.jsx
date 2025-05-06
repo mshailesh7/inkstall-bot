@@ -118,6 +118,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center'
   },
+  footerCenter: {
+    flex: 1,
+    textAlign: 'center',
+  },
   footerText: {
     fontSize: 8,
     fontFamily: 'Times-Roman',
@@ -148,7 +152,17 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 10,
     fontFamily: 'Times-Roman'
-  }
+  },
+  answerSpace: {
+    marginTop: 10,
+    marginBottom: 15,
+    marginLeft: 20
+  },
+  answerLine: {
+    borderTop: '1px solid #000',
+    marginTop: 12,
+    width: '100%'
+  },
 });
 
 // Ultra basic PDF Document component - hardcoded for maximum stability
@@ -170,6 +184,7 @@ const QuestionPaperPDF = ({ data }) => {
   const paperTier = data.paper?.tier || "";
   const paperTime = data.paper?.duration_minutes || 45;
   const paperMarks = data.paper?.total_marks || 40;
+  const isIGCSE = data.paper?.board === "IGCSE";
   
   // Get the questions array safely
   const questions = Array.isArray(data.questions) ? data.questions : [];
@@ -220,6 +235,9 @@ const QuestionPaperPDF = ({ data }) => {
         {/* Footer with page numbers and logo */}
         <View fixed style={styles.footer}>
           <Image src={inkstallLogo} style={styles.footerLogo} />
+          <View style={styles.footerCenter}>
+            <Text style={styles.footerText}>www.inkstall.com</Text>
+          </View>
           <Text style={styles.footerText}>Page <Text render={({ pageNumber }) => `${pageNumber}`} /></Text>
         </View>
       </Page>
@@ -245,6 +263,17 @@ const QuestionPaperPDF = ({ data }) => {
                     {q.options.D && <Text style={styles.option}>D. {q.options.D}</Text>}
                   </View>
                 )}
+                
+                {/* Add answer space for IGCSE board */}
+                {isIGCSE && (
+                  <View style={styles.answerSpace}>
+                    {Array.from({ 
+                      length: q.marks ? Math.max(1, q.marks * 2) : 1 
+                    }).map((_, i) => (
+                      <View key={i} style={styles.answerLine} />
+                    ))}
+                  </View>
+                )}
               </View>
             );
           })}
@@ -256,6 +285,9 @@ const QuestionPaperPDF = ({ data }) => {
         {/* Footer with page numbers and logo - fixed to appear on all pages */}
         <View fixed style={styles.footer}>
           <Image src={inkstallLogo} style={styles.footerLogo} />
+          <View style={styles.footerCenter}>
+            <Text style={styles.footerText}>www.inkstall.com</Text>
+          </View>
           <Text style={styles.footerText}>Page <Text render={({ pageNumber }) => `${pageNumber}`} /></Text>
         </View>
       </Page>
@@ -302,6 +334,9 @@ const AnswerKeyPDF = ({ data }) => {
         {/* Footer with logo - fixed to appear on all pages */}
         <View fixed style={styles.footer}>
           <Image src={inkstallLogo} style={styles.footerLogo} />
+          <View style={styles.footerCenter}>
+            <Text style={styles.footerText}>www.inkstall.com</Text>
+          </View>
           <Text style={styles.footerText}>Page <Text render={({ pageNumber }) => `${pageNumber}`} /></Text>
         </View>
       </Page>
@@ -340,6 +375,9 @@ const AnswerKeyPDF = ({ data }) => {
         {/* Footer with logo - fixed to appear on all pages */}
         <View fixed style={styles.footer}>
           <Image src={inkstallLogo} style={styles.footerLogo} />
+          <View style={styles.footerCenter}>
+            <Text style={styles.footerText}>www.inkstall.com</Text>
+          </View>
           <Text style={styles.footerText}>Page <Text render={({ pageNumber }) => `${pageNumber}`} /></Text>
         </View>
       </Page>

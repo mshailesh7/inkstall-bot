@@ -184,6 +184,7 @@ Reply with **only** a valid UTF-8 JSON object; no markdown, no comments.
     "type":             "Paper 1 Multiple Choice",
     "duration_minutes": 60,
     "total_marks":      40,
+    "board": "IGCSE",
     "instructions": [
       "There are forty questions on this paper. Answer all questions.",
       "For each question there are four possible answers A, B, C and D. Choose the one you consider correct and record your choice in soft pencil on the multiple choice answer sheet.",
@@ -241,9 +242,9 @@ Generate a **Paper 4: Structured Questions** in the official A Level exam format
   "duration_minutes":     120,
   "total_marks":          100,
   "question_types":       ["Structured"],
-  "difficulty":           "Advanced",
+  "difficulty":           "Extremely Difficult only 1 out 10 student can solve",
   "number_of_questions":  35,
-  "marks_per_question":   "2-4 depending on the question"
+  "marks_per_question":   "2-4 depending on the question",
 }
 
 ############################################
@@ -255,9 +256,11 @@ Reply with **only** a valid UTF-8 JSON object; no markdown, no comments.
   "paper": {
     "title":            string,
     "code":             "9702/42",
+    "tier":             "A Level",
     "type":             "Paper 4 Structured Questions",
     "duration_minutes": 120,
     "total_marks":      int,
+    "board": "IGCSE",
     "instructions": [
       "Answer all questions.",
       "Write your answers in the spaces provided.",
@@ -276,7 +279,7 @@ Reply with **only** a valid UTF-8 JSON object; no markdown, no comments.
     {
       "number": 1,
       "question": string,
-      "marks": int,              // Between 2 and 4 marks
+      "marks": int,              // Between 2 to 4 marks
       "answer": string
     }
     // … EXACTLY 35 items
@@ -289,11 +292,12 @@ Reply with **only** a valid UTF-8 JSON object; no markdown, no comments.
 • Follow the format of Cambridge A Level Physics Paper 4 questions.
 • Only use the content from the textbook provided above to generate all questions. Do not use prior knowledge.
 • Include data-based, and experimental-evaluation questions.
+• Make the question length atleast three lines.
+• Make the questions very analytical and complex where atleast 2 formulas needs to be used on numerical based questions.
 • Include a comprehensive model \`"answer"\` for each question (concise but mark-worthy).
 • Avoid multiple-choice format. Each question should be structured, and show mark allocations.
 • Ensure output is strictly valid UTF-8 encoded JSON. No comments, no markdown, no trailing commas.
-`
-  
+` 
       }
             }
     }
