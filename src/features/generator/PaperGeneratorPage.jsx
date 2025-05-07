@@ -159,9 +159,11 @@ const styles = StyleSheet.create({
     marginLeft: 20
   },
   answerLine: {
-    borderTop: '1px solid #000',
-    marginTop: 12,
-    width: '100%'
+    // borderTop: '1px solid rgba(0, 0, 0, 0)', 
+    marginTop: 15,
+    width: '100%',
+    height: 20, 
+    backgroundColor: 'transparent'
   },
 });
 

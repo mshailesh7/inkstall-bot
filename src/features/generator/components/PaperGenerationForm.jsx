@@ -181,7 +181,7 @@ const PaperGenerationForm = ({ onSubmit, isGenerating, pdfText, onFileUpload }) 
     }, 1000); // 1000ms = 1 second
     
     // Get the prompt template
-    const promptTemplate = getPromptTemplate(board, classLevel, subject, paperType);
+    const promptTemplate = getPromptTemplate(board, classLevel, subject, paperType, difficulty);
     
     if (!promptTemplate) {
       clearInterval(progressIntervalRef.current);
