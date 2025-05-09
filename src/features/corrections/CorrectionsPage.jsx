@@ -25,7 +25,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 
-const steps = ['Select Paper & Upload Answers', 'Initiate Correction', 'Review Results', 'Finalize'];
+const steps = ['Upload Student Answers', 'Upload Answer Key', 'Review Results', 'Finalize'];
 
 // Mock data for generated papers
 const papers = [
@@ -86,14 +86,22 @@ const CorrectionsPage = () => {
   const [processingProgress, setProcessingProgress] = useState(0);
   const [selectedPaper, setSelectedPaper] = useState('');
   const [fileUploaded, setFileUploaded] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [fileType, setFileType] = useState('');
+  const [answerKeyUploaded, setAnswerKeyUploaded] = useState(false);
+  const [answerKeyUploadProgress, setAnswerKeyUploadProgress] = useState(0);
   const [correctionResults, setCorrectionResults] = useState([]);
   const [overallScore, setOverallScore] = useState({ earned: 0, total: 0 });
   const [overallComments, setOverallComments] = useState('');
+  const [processingComplete, setProcessingComplete] = useState(false);
 
   const handleNext = () => {
     if (activeStep === 1) {
       // Simulate correction process
       setLoading(true);
+      setProcessingProgress(0);
+      setProcessingComplete(false);
+      
       const timer = setInterval(() => {
         setProcessingProgress((prevProgress) => {
           const newProgress = prevProgress + 10;
@@ -105,6 +113,7 @@ const CorrectionsPage = () => {
               const totalPossible = mockCorrectionResults.reduce((sum, q) => sum + q.maxMark, 0);
               setOverallScore({ earned: totalEarned, total: totalPossible });
               setLoading(false);
+              setProcessingComplete(true);
               setActiveStep((prevStep) => prevStep + 1);
             }, 500);
           }
@@ -120,9 +129,98 @@ const CorrectionsPage = () => {
     setActiveStep((prevStep) => prevStep - 1);
   };
 
-  const handleFileUpload = () => {
-    // In a real app, this would handle the actual file upload
-    setFileUploaded(true);
+  const handleFileUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setFileType(file.type);
+    setUploadProgress(0);
+    setLoading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const url = file.type.startsWith('image/') 
+        ? '/api/textextract/image'
+        : '/api/textextract/pdf';
+
+      const response = await fetch(url, {
+        method: 'POST',
+        body: formData,
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          setUploadProgress(percentCompleted);
+        }
+      });
+
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
+
+      const data = await response.json();
+      console.log('API Response:', data);
+      // Handle the response data as needed
+      setFileUploaded(true);
+      setUploadProgress(100);
+      
+      // Simulate processing after upload
+      setTimeout(() => {
+        setCorrectionResults(mockCorrectionResults);
+        const totalEarned = mockCorrectionResults.reduce((sum, q) => sum + q.aiMark, 0);
+        const totalPossible = mockCorrectionResults.reduce((sum, q) => sum + q.maxMark, 0);
+        setOverallScore({ earned: totalEarned, total: totalPossible });
+        setLoading(false);
+        setActiveStep((prevStep) => prevStep + 1);
+      }, 1000);
+
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert('Failed to upload file. Please try again.');
+      setLoading(false);
+    }
+  };
+
+  const handleAnswerKeyUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('application/pdf')) {
+      alert('Please upload a PDF file');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('/api/textextract/pdf', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
+
+      const data = await response.json();
+      console.log('Answer Key Response:', data);
+      
+      // Simulate processing
+      setTimeout(() => {
+        setLoading(false);
+        setActiveStep((prevStep) => prevStep + 1);
+      }, 1000);
+
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert('Failed to upload answer key. Please try again.');
+      setLoading(false);
+    }
   };
 
   const handleMarkChange = (index, value) => {
@@ -188,31 +286,61 @@ const CorrectionsPage = () => {
                         File Uploaded Successfully
                       </Typography>
                       <Typography variant="body2">
-                        student_answers.pdf
+                        {fileType.startsWith('image/') ? 'Image' : 'PDF'} uploaded
                       </Typography>
                       <Button 
                         variant="outlined" 
                         sx={{ mt: 2, color: 'white', borderColor: 'white' }}
-                        onClick={() => setFileUploaded(false)}
+                        onClick={() => {
+                          setFileUploaded(false);
+                          setFileType('');
+                          setUploadProgress(0);
+                        }}
                       >
                         Remove
                       </Button>
                     </>
                   ) : (
                     <>
-                      <CloudUploadIcon sx={{ fontSize: 60, mb: 2, color: 'text.secondary' }} />
+                      <CloudUploadIcon sx={{ fontSize: 60, mb: 2 }} />
                       <Typography variant="h6" gutterBottom>
-                        Upload Student Answer Sheets
+                        Upload File
                       </Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                        Drag and drop PDF files here, or click to browse
+                      <Typography variant="body2" gutterBottom>
+                        Drag and drop or click to upload
                       </Typography>
-                      <Button 
-                        variant="contained" 
-                        onClick={handleFileUpload}
-                      >
-                        Browse Files
-                      </Button>
+                      <input
+                        accept="image/*,application/pdf"
+                        style={{ display: 'none' }}
+                        id="raised-button-file"
+                        type="file"
+                        onChange={handleFileUpload}
+                      />
+                      <label htmlFor="raised-button-file">
+                        <Button
+                          variant="contained"
+                          component="span"
+                          startIcon={<CloudUploadIcon />}
+                        >
+                          Upload
+                        </Button>
+                      </label>
+                      {uploadProgress > 0 && (
+                        <Box sx={{ mt: 2 }}>
+                          <LinearProgress variant="determinate" value={uploadProgress} />
+                          <Typography variant="body2" sx={{ mt: 1 }}>
+                            {uploadProgress}%
+                          </Typography>
+                        </Box>
+                      )}
+                      {loading && (
+                        <Box sx={{ mt: 2 }}>
+                          <LinearProgress />
+                          <Typography variant="body2" sx={{ mt: 1 }}>
+                            Processing file...
+                          </Typography>
+                        </Box>
+                      )}
                     </>
                   )}
                 </Box>
@@ -224,41 +352,81 @@ const CorrectionsPage = () => {
       case 1:
         return (
           <Paper sx={{ p: 3 }}>
-            {loading ? (
-              <Box sx={{ width: '100%', textAlign: 'center', py: 4 }}>
-                <Typography variant="h6" gutterBottom>
-                  Processing Answer Sheets
-                </Typography>
-                <Box sx={{ width: '100%', mt: 2, mb: 4 }}>
-                  <LinearProgress variant="determinate" value={processingProgress} />
-                </Box>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  {processingProgress < 30 && 'Uploading scans...'}
-                  {processingProgress >= 30 && processingProgress < 60 && 'Processing with Vision API (OCR)...'}
-                  {processingProgress >= 60 && processingProgress < 90 && 'Matching answers and evaluating...'}
-                  {processingProgress >= 90 && 'Finalizing correction...'}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  This may take a few minutes
-                </Typography>
-              </Box>
-            ) : (
-              <Box sx={{ textAlign: 'center', py: 4 }}>
-                <Typography variant="h6" gutterBottom>
-                  Ready to Start Correction
-                </Typography>
-                <Typography variant="body1" sx={{ mb: 3 }}>
-                  The system will process the uploaded answer sheets and compare them with the model answers from the selected paper.
-                </Typography>
-                <Button 
-                  variant="contained" 
-                  size="large"
-                  onClick={() => handleNext()}
-                >
-                  Start Automated Correction
-                </Button>
-              </Box>
-            )}
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                Upload Answer Key
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Please upload the PDF file containing the answer key for the selected paper.
+              </Typography>
+            </Box>
+            
+            <Box 
+              sx={{ 
+                border: '2px dashed #ccc', 
+                borderRadius: 2, 
+                p: 3, 
+                textAlign: 'center',
+                bgcolor: answerKeyUploaded ? 'success.light' : 'background.paper',
+                color: answerKeyUploaded ? 'white' : 'inherit',
+              }}
+            >
+              {answerKeyUploaded ? (
+                <>
+                  <CheckCircleIcon sx={{ fontSize: 60, mb: 2 }} />
+                  <Typography variant="h6" gutterBottom>
+                    Answer Key Uploaded Successfully
+                  </Typography>
+                  <Typography variant="body2">
+                    Answer key.pdf uploaded
+                  </Typography>
+                  <Button 
+                    variant="outlined" 
+                    sx={{ mt: 2, color: 'white', borderColor: 'white' }}
+                    onClick={() => {
+                      setAnswerKeyUploaded(false);
+                      setAnswerKeyUploadProgress(0);
+                    }}
+                  >
+                    Remove
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <CloudUploadIcon sx={{ fontSize: 60, mb: 2 }} />
+                  <Typography variant="h6" gutterBottom>
+                    Upload Answer Key
+                  </Typography>
+                  <Typography variant="body2" gutterBottom>
+                    Drag and drop or click to upload
+                  </Typography>
+                  <input
+                    accept="application/pdf"
+                    style={{ display: 'none' }}
+                    id="answer-key-file"
+                    type="file"
+                    onChange={handleAnswerKeyUpload}
+                  />
+                  <label htmlFor="answer-key-file">
+                    <Button
+                      variant="contained"
+                      component="span"
+                      startIcon={<CloudUploadIcon />}
+                    >
+                      Upload Answer Key
+                    </Button>
+                  </label>
+                  {loading && (
+                    <Box sx={{ mt: 2 }}>
+                      <LinearProgress />
+                      <Typography variant="body2" sx={{ mt: 1 }}>
+                        Processing answer key...
+                      </Typography>
+                    </Box>
+                  )}
+                </>
+              )}
+            </Box>
           </Paper>
         );
         
@@ -506,10 +674,11 @@ const CorrectionsPage = () => {
             onClick={handleNext}
             disabled={
               (activeStep === 0 && (!selectedPaper || !fileUploaded)) ||
+              (activeStep === 1 && !answerKeyUploaded) ||
               loading
             }
           >
-            {activeStep === 0 ? 'Next' : activeStep === 1 ? 'Process' : 'Finalize'}
+            {activeStep === 0 ? 'Next' : activeStep === 1 ? 'Next' : 'Finalize'}
           </Button>
         )}
       </Box>
